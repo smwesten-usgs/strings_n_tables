@@ -61,8 +61,16 @@ print *, sqrt(st2%asDouble())
 print *, st1%asCharacter()
 
 print *, st2%asCharacter()
-call st2%uppercase()
+print *, st2%asUppercase()
+print *, st2%asLowercase()
+call st2%toUppercase()
 print *, st2%asCharacter()
 
+print *, st2 == st2
+print *, st1 == st2
+
+print *, st2 == "Crime and Punishment"
+print *, "Crime and Punishment" == st2
+print *, "Crime and Punishment" == st3
 
 end program test

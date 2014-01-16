@@ -44,11 +44,18 @@ module strings
     procedure :: convert_to_double_fn
     generic, public :: asDouble => convert_to_double_fn
 
-    procedure :: string_to_character_fn 
-    generic, public :: asCharacter => string_to_character_fn 
+    procedure :: convert_to_character_fn 
+    generic, public :: asCharacter => convert_to_character_fn 
 
     procedure :: convert_to_uppercase_sub
-    generic, public :: uppercase => convert_to_uppercase_sub
+    procedure :: convert_to_uppercase_fn
+    generic, public :: toUppercase => convert_to_uppercase_sub
+    generic, public :: asUppercase => convert_to_uppercase_fn
+
+    procedure :: convert_to_lowercase_sub
+    procedure :: convert_to_lowercase_fn
+    generic, public :: toLowercase => convert_to_lowercase_sub
+    generic, public :: asLowercase => convert_to_lowercase_fn
 
     procedure :: split_and_return_text_fn
     generic, public :: chomp => split_and_return_text_fn
@@ -67,7 +74,7 @@ module strings
 
 !   end type T_STRING_LIST	
 
-  public :: operator(+), assignment(=)
+  public :: operator(+), assignment(=), operator(==)
   public :: len
 
   interface operator(+)
@@ -80,9 +87,15 @@ module strings
   end interface operator(+)
 
   interface assignment(=)
-    module procedure :: string_to_character_sub
-    module procedure :: character_to_string_sub
+    procedure :: string_to_character_sub
+    procedure :: character_to_string_sub
   end interface assignment(=)
+
+  interface operator(==)
+    procedure :: is_string_equal_to_string_fn
+    procedure :: is_string_equal_to_char_fn
+    procedure :: is_char_equal_to_string_fn
+  end interface operator(==)    
 
 
 !   interface isNumeric
@@ -94,7 +107,7 @@ module strings
 !   end interface isInteger
 
   interface len
-    module procedure :: string_length_fn
+    procedure :: string_length_fn
   end interface len
 
 contains
@@ -128,12 +141,12 @@ contains
   !> Concatenate a variable-length string and a standard Fortran character type.
   !>
   !> @param [in] stString variable-length string object
-  !> @param [in] sText Standard Fortran fixed-length string
+  !> @param [in] sChar Standard Fortran fixed-length string
   !> @retval stConcatString stString variable-length string object
-  elemental function concatenate_string_char_fn(stString1, sText)	   result(stConcatString)
+  elemental function concatenate_string_char_fn(stString1, sChar)	   result(stConcatString)
 
     type (T_STRING), intent(in)        :: stString1
-    character (len=*), intent(in)      :: sText
+    character (len=*), intent(in)      :: sChar
     type (T_STRING)                    :: stConcatString
   
     ! [ LOCALS ]
@@ -141,7 +154,7 @@ contains
     integer (kind=c_int) :: iIndex
 
     iLen1 = len(stString1)
-    iLen2 = len(sText)
+    iLen2 = len(sChar)
 
     allocate ( stConcatString%sChars( iLen1 + iLen2 ) )
 
@@ -150,7 +163,7 @@ contains
     enddo  
 
     do iIndex = 1, iLen2
-      stConcatString%sChars(iIndex+iLen1:iIndex+iLen1) = sText(iIndex:iIndex)
+      stConcatString%sChars(iIndex+iLen1:iIndex+iLen1) = sChar(iIndex:iIndex)
     enddo  
 
   end function concatenate_string_char_fn
@@ -221,59 +234,59 @@ contains
 
 
 
-  elemental subroutine character_to_string_sub(stString, sText)
+  elemental subroutine character_to_string_sub(stString, sChar)
 
     type (T_STRING), intent(out)    :: stString
-    character (len=*), intent(in)   :: sText
+    character (len=*), intent(in)   :: sChar
 
-    stString = character_to_string_fn(sText)
+    stString = character_to_string_fn(sChar)
 
   end subroutine character_to_string_sub
   
 
 
-  elemental function character_to_string_fn(sText)  result(stString)
+  elemental function character_to_string_fn(sChar)  result(stString)
 
-    character (len=*), intent(in)        :: sText
+    character (len=*), intent(in)        :: sChar
     type (T_STRING)                      :: stString
     
     ! [ LOCALS ]
     integer (kind=c_int) :: iIndex
 
-    allocate(stString%sChars(len_trim(sText)))
+    allocate(stString%sChars(len_trim(sChar)))
 
-    forall (iIndex = 1:len_trim(sText))
-    	stString%sChars(iIndex) = sText(iIndex:iIndex)
+    forall (iIndex = 1:len_trim(sChar))
+    	stString%sChars(iIndex) = sChar(iIndex:iIndex)
     end forall
 
   end function character_to_string_fn
 
 
 
-  elemental subroutine string_to_character_sub(sText, stString)
+  elemental subroutine string_to_character_sub(sChar, stString)
 
-    character (len=*), intent(out)  :: sText
+    character (len=*), intent(out)  :: sChar
     class (T_STRING), intent(in)    :: stString
 
-    sText = string_to_character_fn(stString)
+    sChar = convert_to_character_fn(stString)
 
   end subroutine string_to_character_sub
 
 
 
-  pure function string_to_character_fn(stString)  result(sText)
+  pure function convert_to_character_fn(stString)  result(sChar)
 
     class (T_STRING), intent(in)         :: stString
-    character (len=len(stString))        :: sText
+    character (len=len(stString))        :: sChar
 
     ! [ LOCALS ]
     integer (kind=c_int) :: iIndex
 
     do iIndex = 1,len(stString)
-    	sText(iIndex:iIndex) = stString%sChars(iIndex)
+    	sChar(iIndex:iIndex) = stString%sChars(iIndex)
     enddo
 
-  end function string_to_character_fn
+  end function convert_to_character_fn
 
 
 
@@ -303,11 +316,11 @@ contains
 
     ! [ LOCALS ] 
     integer (kind=c_int) :: iResult
-    character (len=len(this)) :: sText
+    character (len=len(this)) :: sChar
 
-    sText = string_to_character_fn(this)
+    sChar = convert_to_character_fn(this)
 
-    iResult = verify(string = sText, &
+    iResult = verify(string = sChar, &
                      set = sINTEGER)
 
     if (iResult == 0) then
@@ -327,11 +340,11 @@ contains
 
     ! [ LOCALS ] 
     integer (kind=c_int) :: iResult
-    character (len=len(this)) :: sText
+    character (len=len(this)) :: sChar
 
-    sText = string_to_character_fn(this)
+    sChar = convert_to_character_fn(this)
 
-    iResult = verify(string = sText, &
+    iResult = verify(string = sChar, &
     	               set = sNUMERIC)
 
     if (iResult == 0) then
@@ -369,11 +382,11 @@ contains
 
 !   end subroutine append_string_sub  
     
- function split_and_return_text_fn(this, sDelimiters)    result(sText)
+ function split_and_return_text_fn(this, sDelimiters)    result(sChar)
 
     class (T_STRING), intent(inout)           :: this
     character (len=*), intent(in), optional   :: sDelimiters
-    character (len=:), allocatable            :: sText
+    character (len=:), allocatable            :: sChar
 
     ! [ LOCALS ]
     character (len=:), allocatable :: sMyDelimiters
@@ -386,21 +399,93 @@ contains
     	sMyDelimiters = sWHITESPACE
     endif
     
-    sTempText = string_to_character_fn(this)
+    sTempText = convert_to_character_fn(this)
 
     iIndex = scan( string = sTempText, &
     	            set = sMyDelimiters )
 
     if (iIndex == 0) then
-      sText = sTempText
+      sChar = sTempText
       this = ""
     else
-      sText = trim(adjustl( sTempText(1:iIndex-1) ) )
+      sChar = trim(adjustl( sTempText(1:iIndex-1) ) )
       this = trim(adjustl(sTempText(iIndex + 1:) ) )
     endif  
 
   end function split_and_return_text_fn  	
 
+  
+
+  function is_string_equal_to_string_fn(stString1, stString2)  result(lBool)
+
+    type (T_STRING), intent(in) :: stString1
+    type (T_STRING), intent(in) :: stString2
+    logical (kind=c_bool)       :: lBool  
+
+    if (trim(stString1%asUppercase() ) .eq. &
+        trim(stString2%asUppercase() ) )  then
+
+      lBool = lTRUE
+
+    else
+    
+      lBool = lFALSE
+
+    endif    
+
+  end function is_string_equal_to_string_fn
+
+
+
+  function is_string_equal_to_char_fn(stString, sChar)  result(lBool)
+
+    type (T_STRING), intent(in)   :: stString
+    character (len=*), intent(in) :: sChar
+    logical (kind=c_bool)         :: lBool  
+
+    ! [ LOCALS ]
+    type (T_STRING) :: stString2
+
+    stString2 = sChar  
+
+    if (trim(stString%asUppercase() ) .eq. &
+        trim(stString2%asUppercase() ) )  then
+
+      lBool = lTRUE
+
+    else
+    
+      lBool = lFALSE
+
+    endif    
+
+  end function is_string_equal_to_char_fn
+
+
+
+  function is_char_equal_to_string_fn(sChar, stString)  result(lBool)
+
+    character (len=*), intent(in) :: sChar
+    type (T_STRING), intent(in)   :: stString
+    logical (kind=c_bool)         :: lBool  
+
+    ! [ LOCALS ]
+    type (T_STRING) :: stString2
+
+    stString2 = sChar  
+
+    if (trim(stString%asUppercase() ) .eq. &
+        trim(stString2%asUppercase() ) )  then
+
+      lBool = lTRUE
+
+    else
+    
+      lBool = lFALSE
+
+    endif    
+
+  end function is_char_equal_to_string_fn
 
 
   function convert_to_int_fn(this)   result(iResult)
@@ -480,5 +565,89 @@ contains
     endif
 
   end subroutine convert_to_uppercase_sub
+
+
+
+  function convert_to_uppercase_fn(this)  result(sChar)
+
+    class (T_STRING), intent(in)      :: this
+    character (len=len(this))         :: sChar
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int) :: iASCII_charnum
+
+    sChar = ""
+
+    if (len(this) > 0) then
+      do iIndex = 1, len(this)
+        iASCII_charnum = iachar(this%sChars(iIndex))
+        if (     iASCII_charnum >= 97 &
+          .and.  iASCII_charnum <= 122) then
+          sChar(iIndex:iIndex) = achar(iASCII_charnum - 32)
+        else
+          sChar(iIndex:iIndex) = this%sChars(iIndex)
+        endif
+
+      enddo
+
+    endif
+
+  end function convert_to_uppercase_fn
+
+
+
+ subroutine convert_to_lowercase_sub(this)
+
+    class (T_STRING), intent(inout)      :: this
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int) :: iASCII_charnum
+
+    if (len(this) > 0) then
+      do iIndex = 1, len(this)
+        iASCII_charnum = iachar(this%sChars(iIndex))
+        if (     iASCII_charnum >= 65 &
+          .and.  iASCII_charnum <= 90) then
+          this%sChars(iIndex) = achar(iASCII_charnum + 32)
+        endif
+      enddo
+
+    endif
+
+  end subroutine convert_to_lowercase_sub
+
+
+
+  function convert_to_lowercase_fn(this)  result(sChar)
+
+    class (T_STRING), intent(in)      :: this
+    character (len=len(this))         :: sChar
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int) :: iASCII_charnum
+
+    sChar = ""
+
+    if (len(this) > 0) then
+      do iIndex = 1, len(this)
+        iASCII_charnum = iachar(this%sChars(iIndex))
+        if (     iASCII_charnum >= 65 &
+          .and.  iASCII_charnum <= 90) then
+          sChar(iIndex:iIndex) = achar(iASCII_charnum + 32)
+        else
+          sChar(iIndex:iIndex) = this%sChars(iIndex)
+        endif
+
+      enddo
+
+    endif
+
+  end function convert_to_lowercase_fn
+
+
+
 
 end module strings

@@ -20,6 +20,8 @@ integer (kind=c_int), parameter :: T_STRING_DATA = 4
 logical (kind=c_bool), parameter :: lFALSE = .false.
 logical (kind=c_bool), parameter :: lTRUE = .true.
 
+character (len=8192) :: sBuf
+
 public :: T_DATA_FRAME, T_DATA_COLUMN, T_DATA_FILE
 
 type T_DATA_COLUMN
@@ -104,6 +106,10 @@ contains
 
       open(newunit=this%iUnitNum, file=stFilename%asCharacter(), iostat=this%iStat)
       if (this%iStat == 0)  this%lIsOpen = lTRUE
+    else
+
+      print *, "Failed to open file..."
+
     endif  
 
   end subroutine open_file_string_sub
@@ -123,6 +129,11 @@ contains
 
       open(newunit=this%iUnitNum, file=sFilename, iostat=this%iStat)
       if (this%iStat == 0)  this%lIsOpen = lTRUE
+
+    else
+
+      print *, "Failed to open file..."
+
     endif  
 
   end subroutine open_file_char_sub
@@ -168,14 +179,11 @@ contains
 
     ! [ LOCALS ] 
     integer (kind=c_int) :: iStat
-    character (len=:), allocatable :: sChar
-  
-    sChar = ""
 
     if (this%lIsOpen) then
 
-      read (unit = this%iUnitNum, fmt = *, iostat = iStat) sChar
-      stString = trim(sChar)
+      read (unit = this%iUnitNum, fmt = "(a)", iostat = iStat) sBuf
+      stString = trim(sBuf)
 
     endif  
 

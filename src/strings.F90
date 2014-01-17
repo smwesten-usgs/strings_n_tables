@@ -59,7 +59,11 @@ module strings
 
     procedure :: split_and_return_text_fn
     generic, public :: chomp => split_and_return_text_fn
-  
+ 
+    procedure :: replace_character_sub
+    generic, public :: replace => replace_character_sub
+
+
   end type T_STRING
 
 
@@ -432,6 +436,28 @@ contains
     endif  
 
   end function split_and_return_text_fn  	
+
+  subroutine replace_character_sub(this, sFind, sReplace)
+
+    class (T_STRING), intent(inout) :: this
+    character (len=1), intent(in)  :: sFind
+    character (len=1), intent(in)  :: sReplace
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+
+    if ( len(this) > 0 ) then
+
+      do iIndex = 1, len(this)
+
+        if (this%sChars(iIndex) .eq. sFind) &
+          this%sChars(iIndex) = sReplace
+
+      enddo  
+
+    endif  
+
+  end subroutine replace_character_sub  
 
 
   function is_logical4_equal_to_logical1_fn(lBool4, lBool1)   result(lBool)

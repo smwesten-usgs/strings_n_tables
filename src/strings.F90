@@ -62,20 +62,30 @@ module strings
   
   end type T_STRING
 
-!   type T_STRING_LIST
-!     type (T_STRING), dimension(:), allocatable :: sl 
 
-!   contains
+  type, public :: T_STRING_LIST
+    type (T_STRING), dimension(:), allocatable :: sl 
+    integer (kind=c_int) :: iCount = 0 
+
+  contains
   
-!     procedure :: append => append_string_sub
-! !    procedure :: push => push_string_fn
-! !    procedure :: pop => pop_string_fn
+    procedure :: initialize => initialize_list_sub
 
+    procedure :: append_string_sub
+    procedure :: append_char_sub
+    generic :: append => append_char_sub, append_string_sub
 
-!   end type T_STRING_LIST	
+!    procedure :: push => push_string_fn
+!    procedure :: pop => pop_string_fn
+    procedure :: grep => return_matching_lines_fn
+
+    procedure :: print => print_to_screen_sub
+
+  end type T_STRING_LIST	
+
 
   public :: operator(+), assignment(=), operator(==)
-  public :: len
+  public :: len, assert
 
   interface operator(+)
     procedure :: concatenate_string_string_fn
@@ -89,12 +99,15 @@ module strings
   interface assignment(=)
     procedure :: string_to_character_sub
     procedure :: character_to_string_sub
+    procedure :: string_to_string_sub
   end interface assignment(=)
 
   interface operator(==)
     procedure :: is_string_equal_to_string_fn
     procedure :: is_string_equal_to_char_fn
     procedure :: is_char_equal_to_string_fn
+    procedure :: is_logical4_equal_to_logical1_fn
+    procedure :: is_logical1_equal_to_logical4_fn
   end interface operator(==)    
 
 
@@ -110,9 +123,14 @@ module strings
     procedure :: string_length_fn
   end interface len
 
+  interface assert
+     procedure :: assert_4bit
+     procedure :: assert_1bit
+  end interface assert
+
 contains
 
-  elemental function concatenate_string_string_fn(stString1, stString2)	   result(stConcatString)
+  function concatenate_string_string_fn(stString1, stString2)	   result(stConcatString)
 
     type (T_STRING), intent(in)        :: stString1
     type (T_STRING), intent(in)        :: stString2
@@ -143,7 +161,7 @@ contains
   !> @param [in] stString variable-length string object
   !> @param [in] sChar Standard Fortran fixed-length string
   !> @retval stConcatString stString variable-length string object
-  elemental function concatenate_string_char_fn(stString1, sChar)	   result(stConcatString)
+  function concatenate_string_char_fn(stString1, sChar)	   result(stConcatString)
 
     type (T_STRING), intent(in)        :: stString1
     character (len=*), intent(in)      :: sChar
@@ -171,7 +189,7 @@ contains
 
 
 
-  elemental function concatenate_string_int_fn(stString1, iValue)	   result(stConcatString)
+  function concatenate_string_int_fn(stString1, iValue)	   result(stConcatString)
 
     type (T_STRING), intent(in)        :: stString1
     integer (kind=c_int), intent(in)   :: iValue
@@ -202,7 +220,7 @@ contains
   
 
 
-  pure function concatenate_string_real_fn(stString1, rValue)	   result(stConcatString)
+  function concatenate_string_real_fn(stString1, rValue)	   result(stConcatString)
 
     type (T_STRING), intent(in)        :: stString1
     real (kind=c_float), intent(in)    :: rValue
@@ -234,7 +252,7 @@ contains
 
 
 
-  elemental subroutine character_to_string_sub(stString, sChar)
+  subroutine character_to_string_sub(stString, sChar)
 
     type (T_STRING), intent(out)    :: stString
     character (len=*), intent(in)   :: sChar
@@ -245,7 +263,33 @@ contains
   
 
 
-  elemental function character_to_string_fn(sChar)  result(stString)
+
+  subroutine string_to_string_sub(stStringOut, stStringIn)
+
+    type (T_STRING), intent(inout)  :: stStringOut
+    type (T_STRING), intent(in)     :: stStringIn
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iStat
+    integer (kind=c_int) :: iIndex
+
+    if (allocated(stStringOut%sChars) ) &
+        deallocate(stStringOut%sChars)
+
+    allocate(stStringOut%sChars( len(stStringIn) ), stat = iStat )
+
+    call assert(iStat == 0, "Problem allocating memory", &
+        trim(__FILE__), __LINE__)
+
+    do iIndex = 1, len(stStringIn)
+      stStringOut%sChars(iIndex) = stStringIn%sChars(iIndex)
+    enddo
+
+  end subroutine string_to_string_sub
+
+
+
+  function character_to_string_fn(sChar)  result(stString)
 
     character (len=*), intent(in)        :: sChar
     type (T_STRING)                      :: stString
@@ -255,15 +299,15 @@ contains
 
     allocate(stString%sChars(len_trim(sChar)))
 
-    forall (iIndex = 1:len_trim(sChar))
+    do iIndex = 1, len_trim(sChar)
     	stString%sChars(iIndex) = sChar(iIndex:iIndex)
-    end forall
+    enddo
 
   end function character_to_string_fn
 
 
 
-  elemental subroutine string_to_character_sub(sChar, stString)
+  subroutine string_to_character_sub(sChar, stString)
 
     character (len=*), intent(out)  :: sChar
     class (T_STRING), intent(in)    :: stString
@@ -274,7 +318,7 @@ contains
 
 
 
-  pure function convert_to_character_fn(stString)  result(sChar)
+  function convert_to_character_fn(stString)  result(sChar)
 
     class (T_STRING), intent(in)         :: stString
     character (len=len(stString))        :: sChar
@@ -309,7 +353,7 @@ contains
 
   
 
-  pure function is_string_an_integer_fn(this)   result(lBool)
+  function is_string_an_integer_fn(this)   result(lBool)
 
     class (T_STRING), intent(in) :: this
     logical (kind=c_bool)       :: lBool
@@ -333,7 +377,7 @@ contains
 
 
 
-  pure function is_string_numeric_fn(this)   result(lBool)
+  function is_string_numeric_fn(this)   result(lBool)
 
     class (T_STRING), intent(in) :: this
     logical (kind=c_bool)       :: lBool
@@ -355,32 +399,7 @@ contains
 
   end function is_string_numeric_fn
 
-!   subroutine append_string_sub(this, stString)
 
-!     class (T_STRING_LIST), intent(inout) :: this
-!     class (T_STRING), intent(in)         :: stString
-
-!     ! [ LOCALS ] 
-!     type (T_STRING_LIST) :: templist
-!     integer (kind=c_int) :: iSize
-
-!     if (allocated(this%sl)) then
-!       iSize = size(this%sl,1)
-!       allocate(templist%sl(iSize))
-
-!       templist%sl(1:iSize) = this%sl(1:iSize)
-!       deallocate(this%sl)
-!       allocate(this%sl(iSize+1))
-!       this%sl(1:iSize) = templist%sl(1:iSize)
-!       this%sl(iSize + 1) = this%sl(iSize)
- 
-!     else
-!     	allocate(this%sl(1))
-!     	this%sl(1) = stString
-!     endif
-    	
-
-!   end subroutine append_string_sub  
     
  function split_and_return_text_fn(this, sDelimiters)    result(sChar)
 
@@ -414,7 +433,36 @@ contains
 
   end function split_and_return_text_fn  	
 
-  
+
+  function is_logical4_equal_to_logical1_fn(lBool4, lBool1)   result(lBool)
+
+    logical (kind=4), intent(in)      :: lBool4
+    logical (kind=1), intent(in)      :: lBool1
+    logical (kind=c_bool)              :: lBool
+
+    if (logical(lBool4, kind=c_int) .eqv. logical(lBool1, kind=c_int)) then
+      lBool = lTRUE
+    else
+      lBool = lFALSE
+    endif
+         
+  end function is_logical4_equal_to_logical1_fn  
+
+
+  function is_logical1_equal_to_logical4_fn(lBool1, lBool4)   result(lBool)
+
+    logical (kind=1), intent(in)      :: lBool1
+    logical (kind=4), intent(in)      :: lBool4
+    logical (kind=c_bool)              :: lBool
+
+    if (logical(lBool1, kind=c_int) .eqv. logical(lBool4, kind=c_int)) then
+      lBool = lTRUE
+    else
+      lBool = lFALSE
+    endif
+         
+  end function is_logical1_equal_to_logical4_fn  
+
 
   function is_string_equal_to_string_fn(stString1, stString2)  result(lBool)
 
@@ -648,6 +696,189 @@ contains
   end function convert_to_lowercase_fn
 
 
+  subroutine initialize_list_sub(this)
 
+    class (T_STRING_LIST), intent(inout) :: this
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iStat
+
+    if (.not. allocated(this%sl) ) then
+
+      allocate(this%sl(20), stat = iStat)
+
+    endif
+
+    call assert(iStat == 0, &
+        "Failed to allocate memory for list of string objects.")
+
+  end subroutine initialize_list_sub
+
+
+  function return_matching_lines_fn(this, sChar)     result(stString)
+
+    class (T_STRING_LIST), intent(in) :: this
+    character (len=*), intent(in)     :: sChar
+    type (T_STRING_LIST)              :: stString
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int) :: iResult
+
+    do iIndex=1, this%iCount
+
+      iResult = index(string = this%sl(iIndex)%asCharacter(), &
+                      substring = sChar)
+
+      if (iResult /= 0)  call stString%append( this%sl(iIndex) )
+
+    enddo  
+
+  end function return_matching_lines_fn
+  
+
+
+  subroutine append_string_sub(this, stString)
+
+    class (T_STRING_LIST), intent(inout)    :: this
+    type (T_STRING), intent(in)        :: stString
+
+    call list_check_allocation_sub(this)
+
+    this%iCount = this%iCount + 1
+    this%sl(this%iCount) = stString
+
+  end subroutine append_string_sub  
+
+
+  subroutine list_check_allocation_sub(this)
+
+    class (T_STRING_LIST), intent(inout)  :: this
+
+
+    ! [ LOCALS ] 
+    type (T_STRING_LIST) :: templist
+    integer (kind=c_int) :: iSize
+    integer (kind=c_int) :: iNewSize
+    integer (kind=c_int) :: iIndex
+
+    if (allocated(this%sl)) then
+
+      iSize = size(this%sl,1)
+
+      !> We have reached the current maximum number of allocated
+      !> string entities in this list
+      !> NEED TO ALLOCATE MEMORY IN A NEW LIST, COPY EXISTING LIST
+      if (iSize == this%iCount) then
+        !> increase size by 30%
+        iNewSize = int(real(iSize) * 0.3) + iSize
+        allocate(templist%sl(iNewSize))
+
+        !> copy each existing list item to temporary list
+        do iIndex=1, iSize
+          templist%sl(iIndex) = this%sl(iIndex)
+        enddo
+
+        !> transfer the memory associated with templist to
+        !> the master list object
+        call move_alloc(templist%sl, this%sl)
+
+      endif
+
+    else
+
+      call this%initialize()
+
+    endif
+
+  end subroutine list_check_allocation_sub  
+
+
+
+  subroutine append_char_sub(this, sChar)
+
+    class (T_STRING_LIST), intent(inout) :: this
+    character (len=*), intent(in)        :: sChar
+
+    ! [ LOCALS ]
+    type (T_STRING) :: stString
+
+    call list_check_allocation_sub(this)
+
+    this%iCount = this%iCount + 1
+    stString = sChar
+    this%sl(this%iCount) = stString
+
+  end subroutine append_char_sub  
+
+
+
+  subroutine print_to_screen_sub(this)
+
+    class (T_STRING_LIST), intent(in) :: this
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+
+    if (this%iCount > 0) then
+      
+      do iIndex = 1, this%iCount
+
+        write(*, fmt="(a)") this%sl(iIndex)%asCharacter()
+
+      enddo  
+
+    endif
+
+  end subroutine print_to_screen_sub
+
+
+
+  subroutine assert_1bit(lCondition, sMessage, sModule, iLine)
+
+    logical (kind=c_bool), intent(in)           :: lCondition
+    character (len=*), intent(in)               :: sMessage
+    character (len=*), intent(in), optional     :: sModule
+    integer (kind=c_int), intent(in), optional  :: iLine 
+
+    if (.not. lCondition) then
+
+      write (*, fmt="(a)") "Error condition: "//trim(sMessage)
+
+      if (present(sModule))  &
+        write (*, fmt="(a)")     "   module: "//trim(sModule)
+
+      if (present(iLine))  &
+        write (*, fmt="(a,i7)")  "  line no: ", iLine
+
+      stop
+
+    endif      
+
+  end subroutine assert_1bit
+
+
+  subroutine assert_4bit(lCondition, sMessage, sModule, iLine)
+
+    logical (kind=4), intent(in)                :: lCondition
+    character (len=*), intent(in)               :: sMessage
+    character (len=*), intent(in), optional     :: sModule
+    integer (kind=c_int), intent(in), optional  :: iLine 
+
+    if (.not. lCondition) then
+
+      write (*, fmt="(a)") "Error condition: "//trim(sMessage)
+
+      if (present(sModule))  &
+        write (*, fmt="(a)")     "   module: "//trim(sModule)
+
+      if (present(iLine))  &
+        write (*, fmt="(a,i7)")  "  line no: ", iLine
+
+      stop
+
+    endif      
+
+  end subroutine assert_4bit
 
 end module strings

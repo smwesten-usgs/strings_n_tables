@@ -10,11 +10,12 @@ type (T_STRING) :: st3
 type (T_STRING) :: st4
 type (T_STRING) :: st
 
+type (T_STRING), dimension(50) :: sta
+
+type (T_STRING_LIST) :: stl, stl2
+
 character (len=2042) :: sChar
 integer (kind=c_int) :: iIndex
-
-
-
 
 sChar = "Four score and seven years ago our fathers brought forth on this continent a new nation, conceived in liberty, and dedicated to the proposition that all men are created equal." &
     //" Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. We are met on a great battlefield of that war. We have come to dedicate a portion of that field, as a final resting place for those who here gave their lives that that nation might live. It is altogether fitting and proper that we should do this." &
@@ -46,9 +47,14 @@ st4 = "6.022169E+27"
 print *, st4%isNumeric()
 print *, st4%isInteger()
 
+iIndex = 1
+
 do while( len(st) > 0)
 
-  print *, st%chomp(",")
+  !sta(iIndex) = st%chomp(",")
+  call stl2%append( st%chomp(",") )
+  print *, stl2%sl(iIndex)%asCharacter()
+  iIndex = iIndex + 1
 
 enddo	
 
@@ -72,5 +78,9 @@ print *, st1 == st2
 print *, st2 == "Crime and Punishment"
 print *, "Crime and Punishment" == st2
 print *, "Crime and Punishment" == st3
+
+stl = stl2%grep("consecrate")
+
+call stl%print()
 
 end program test

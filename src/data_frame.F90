@@ -1,6 +1,8 @@
 module data_frame
 
 use iso_c_binding, only : c_int, c_float, c_double, c_bool
+use iso_fortran_env, only : IOSTAT_END
+use strings
 implicit none
 
 private
@@ -10,18 +12,19 @@ character (len=1), parameter :: sBACKSLASH = achar(92)
 character (len=1), parameter :: sFORWARDSLASH = achar(47)
 character (len=1), parameter :: sRETURN = achar(13)
 
-integer (kind=c_int), parameter :: MAXCOLWIDTH = 15
-
 integer (kind=c_int), parameter :: INTEGER_DATA = 1
 integer (kind=c_int), parameter :: FLOAT_DATA = 2
 integer (kind=c_int), parameter :: DOUBLE_DATA = 3
-integer (kind=c_int), parameter :: CHARACTER_DATA = 4
+integer (kind=c_int), parameter :: T_STRING_DATA = 4
+
+logical (kind=c_bool), parameter :: lFALSE = .false.
+logical (kind=c_bool), parameter :: lTRUE = .true.
 
 public :: T_DATA_FRAME, T_DATA_COLUMN, T_DATA_FILE
 
 type T_DATA_COLUMN
 
-  character (len=1), dimension(:), allocatable :: sColumnName
+  type (T_STRING) :: stColumnName
   integer (kind=c_int) :: iDataType
   integer (kind=c_int) :: iIndex
   integer (kind=c_int) :: iCount
@@ -29,7 +32,6 @@ type T_DATA_COLUMN
   real (kind=c_float), dimension(:), allocatable :: rData
   real (kind=c_double), dimension(:), allocatable :: dData
   character (len=MAXCOLWIDTH), dimension(:), allocatable :: sData
-
 
 contains
 
@@ -45,7 +47,7 @@ end type T_DATA_COLUMN
 
 type T_DATA_FRAME
 
-
+  type (T_DATA_COLUMN), dimension(:), allocatable :: tCol
   
 
 end type T_DATA_FRAME  
@@ -53,13 +55,12 @@ end type T_DATA_FRAME
 
 type T_DATA_FILE
 
-  character (len=1), dimension(:), allocatable :: sFilename
-  character (len=1),dimension(:), allocatable :: sDelimiters
-  integer (kind=c_int) :: iUnitNum
-  integer (kind=c_int) :: iStat
-  integer (kind=c_int) :: iNumRows
-  integer (kind=c_int) :: iNumCols
-  character (len=1), dimension(:), allocatable :: sMissingValue
+  type (T_STRING)        :: stFilename
+  type (T_STRING)        :: stDelimiters
+  logical (kind=c_bool)  :: lIsOpen = lFALSE  
+  integer (kind=c_int)   :: iUnitNum
+  integer (kind=c_int)   :: iStat
+  type (T_STRING)        :: stMissingValue
 
 contains
  
@@ -73,7 +74,7 @@ contains
 !  procedure :: numCols => return_num_cols_fn
 !  procedure :: countRows => count_rows_sub
 !  procedure :: countColumns => cound_columns_sub  
-!  procedure :: getRow => get_row_of_data_sub
+  procedure :: getRow => get_row_of_data_sub
 !  procedure :: putRow => put_row_of_data_sub
 !  procedure :: getNext => get_next_data_item_fn
 
@@ -84,14 +85,16 @@ contains
 
   
 
-  subroutine open_file_sub(this, sFilename)
+  subroutine open_file_sub(this, stFilename)
  
     class (T_DATA_FILE) :: this
-  	character(len=*) :: sFilename
+  	type (T_STRING) :: stFilename
 
-    if (.not. this%isOpen(sFilename) ) &
+    if (.not. this%isOpen(stFilename ) ) then
 
-      open(newunit=this%iUnitNum, file=sFilename, iostat=this%iStat)
+      open(newunit=this%iUnitNum, file=stFilename%asCharacter(), iostat=this%iStat)
+      if (this%iStat == 0)  this%lIsOpen = lTRUE
+    endif  
 
   end subroutine open_file_sub
   
@@ -100,66 +103,54 @@ contains
 
     class (T_DATA_FILE) :: this
 
-    if ( this%isOpen(this%sFilename) ) &
+    if ( this%isOpen(this%stFilename ) ) &
       close(unit=this%iUnitNum, iostat=this%iStat)
 
   end subroutine close_file_sub  
 
 
-  function does_file_exist_fn(this, sFilename)    result(lExists)
+  function does_file_exist_fn(this, stFilename)    result(lExists)
 
     class (T_DATA_FILE) :: this
-    character(len=*), intent(in) :: sFilename
+    type (T_STRING) :: stFilename
     logical(kind=c_bool) :: lExists
 
-    inquire(file=sFilename, exist=lExists)
+    inquire(file=stFilename%asCharacter(), exist=lExists)
 
   end function does_file_exist_fn
 
 
 
-  function is_file_open_fn(this, sFilename)    result(lOpened)
+  function is_file_open_fn(this, stFilename)    result(lOpened)
 
-    class (T_DATA_FILE) :: this
-    character(len=*), intent(in) :: sFilename
-    logical(kind=c_bool) :: lOpened
+    class (T_DATA_FILE)           :: this
+    type (T_STRING), intent(in)   :: stFilename
+    logical(kind=c_bool)          :: lOpened
 
-    inquire(file=sFilename, opened=lOpened)
+    inquire(file=stFilename%asCharacter(), opened=lOpened)
 
   end function is_file_open_fn	
 
 
+  function get_row_of_data_sub(this)   result(stString)
 
-  subroutine chomp(sRecord, sItem, sDelimiters)
+    class (T_DATA_FILE), intent(in)            :: this
+    type (T_STRING)                            :: stString
 
-    ! ARGUMENTS
-    character (len=*), intent(inout)                 :: sRecord
-    character (len=256), intent(out)                 :: sItem
-    character (len=*), intent(in)                    :: sDelimiters
-    ! LOCALS
-    integer (kind=c_int) :: iR                      ! Index in sRecord
-    integer (kind=c_int) :: iB                      !
-    integer (kind=c_int) :: iLen
+    ! [ LOCALS ] 
+    integer (kind=c_int) :: iStat
+    character (len=:), allocatable :: sChar
+  
+    sChar = ""
 
-    iB = 0
+    if (this%lIsOpen) then
 
-    ! eliminate any leading spaces
-    sRecord = adjustl(sRecord)
-    ! find the end position of 'sRecord'
-    iLen = len_trim(sRecord)
+      read (unit = this%iUnitNum, fmt = *, iostat = iStat) sChar
+      stString = trim(sChar)
 
-    ! find the POSITION of the first delimiter found
-    iR = SCAN(trim(sRecord),sDelimiters)
+    endif  
 
-    if(iR==0) then
-      sItem = trim(sRecord)   ! no delimiters found; return entirety of sRecord
-      sRecord = ""            ! as sItem
-    else
-      sItem = trim(sRecord(1:iR-1))
-      sRecord = trim( adjustl(sRecord(iR+1:)) )
-    end if
-
-  end subroutine chomp
+  end function get_row_of_data_sub  
 
 
   subroutine create_new_column_sub(this, sColumnName, iDataType, iCount)
@@ -186,38 +177,19 @@ contains
 
         allocate( this%dData(iCount), stat=iStat )
 
-      case (CHARACTER_DATA)
+      case (T_STRING_DATA)
 
         allocate( this%sData(iCount), stat=iStat )
 
       case default
 
-        call fullstop ("Unhandled case select value", &
+        call assert(lFALSE, "Unhandled case select value", &
         	             trim(__FILE__), __LINE__)
 
 
     end select  
 
   end subroutine create_new_column_sub	
-
-
-  subroutine fullstop(sMessage, sFilename, iLineNum)
-
-    character (len=*) :: sMessage
-    character (len=*) :: sFilename
-    integer (kind=c_int) :: iLineNum
-
-    ! [ LOCALS ]
-    character (len=1), dimension(:), allocatable :: sMessageText
-
-    write(sMessageText, fmt="(a,' [',a,', line number: ',i6,']')") &
-    	trim(sMessage), trim(sFilename), iLineNum
-
-    write(*, fmt="(a)") sMessageText
-
-    stop
-
-  end subroutine fullstop
 
 
 end module data_frame

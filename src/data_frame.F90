@@ -31,7 +31,7 @@ type T_DATA_COLUMN
   integer (kind=c_int), dimension(:), allocatable :: iData
   real (kind=c_float), dimension(:), allocatable :: rData
   real (kind=c_double), dimension(:), allocatable :: dData
-  character (len=MAXCOLWIDTH), dimension(:), allocatable :: sData
+  type (T_STRING_LIST) :: stData
 
 contains
 
@@ -48,6 +48,12 @@ end type T_DATA_COLUMN
 type T_DATA_FRAME
 
   type (T_DATA_COLUMN), dimension(:), allocatable :: tCol
+
+contains
+
+  ! procedure :: makeUnique => make_unique_identifier_sub
+  !> take contents of serveral columns and concatenate them to 
+  !> create a unique ID (think METALICUS)
   
 
 end type T_DATA_FRAME  
@@ -64,7 +70,11 @@ type T_DATA_FILE
 
 contains
  
-  procedure :: openFile => open_file_sub
+  procedure :: open_file_string_sub
+  procedure :: open_file_char_sub
+  generic :: openFile => open_file_string_sub, &
+                         open_file_char_sub
+
   procedure :: closeFile => close_file_sub
   procedure :: isOpen => is_file_open_fn
   procedure :: exists => does_file_exist_fn
@@ -85,10 +95,10 @@ contains
 
   
 
-  subroutine open_file_sub(this, stFilename)
+  subroutine open_file_string_sub(this, stFilename)
  
-    class (T_DATA_FILE) :: this
-  	type (T_STRING) :: stFilename
+    class (T_DATA_FILE), intent(inout) :: this
+  	type (T_STRING), intent(in)     :: stFilename
 
     if (.not. this%isOpen(stFilename ) ) then
 
@@ -96,8 +106,27 @@ contains
       if (this%iStat == 0)  this%lIsOpen = lTRUE
     endif  
 
-  end subroutine open_file_sub
+  end subroutine open_file_string_sub
   
+
+  subroutine open_file_char_sub(this, sFilename)
+ 
+    class (T_DATA_FILE), intent(inout) :: this
+    character (len=*), intent(in)   :: sFilename
+
+    ! [ LOCALS ]
+    type (T_STRING) :: stString
+
+    stString = sFilename  
+
+    if (.not. this%isOpen(stString) ) then
+
+      open(newunit=this%iUnitNum, file=sFilename, iostat=this%iStat)
+      if (this%iStat == 0)  this%lIsOpen = lTRUE
+    endif  
+
+  end subroutine open_file_char_sub
+
 
   subroutine close_file_sub(this)
 
@@ -179,7 +208,6 @@ contains
 
       case (T_STRING_DATA)
 
-        allocate( this%sData(iCount), stat=iStat )
 
       case default
 

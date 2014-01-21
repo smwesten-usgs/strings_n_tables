@@ -10,21 +10,34 @@ program dftest
   type (T_STRING) :: stString
   type (T_STRING) :: st
   type (T_STRING_LIST) :: stl
+  type (T_DATA_FRAME) :: df
+  type (T_STRING_LIST) :: stHeader	
+
+  integer (kind=c_int), dimension(:), allocatable :: iDataType
 
   call tFile%openFile("rjh_21Nov13_Sample Lake.5.DMCM_fish_concs.csv")
 
-  stString = tFile%getRow()
+  stHeader = tFile%readHeader()
 
-  print *, stString%asCharacter()
+  allocate(iDataType(stHeader%count()))
 
-  do while (len(stString) > 0)
+  iDataType = FLOAT_DATA
 
-    st = stString%chomp(",")
-    call st%replace(" ", "_")
-    call stl%append(st)
+  call df%initialize(stHeader, iDataType, tFile%iRecordCount)
 
-  end do	
+  do while (tFile%lIsOpen)
 
-  call stl%print()
+    stString = tFile%getRow()
+
+    call df%rowvals(stString, ",")
+
+  enddo
+
+  !call stString%deallocate()
+  !call st%deallocate()
+  !call stl%deallocate()
+  !call tFile%deallocate()
+
+  call df%summarize()
 
 end program dftest

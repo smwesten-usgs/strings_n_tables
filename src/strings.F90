@@ -63,6 +63,11 @@ module strings
     procedure :: replace_character_sub
     generic, public :: replace => replace_character_sub
 
+    procedure :: return_length_fn
+    generic, public :: length => return_length_fn
+
+    procedure :: deallocate_sub
+    generic, public :: deallocate => deallocate_sub
 
   end type T_STRING
 
@@ -77,11 +82,21 @@ module strings
 
     procedure :: append_string_sub
     procedure :: append_char_sub
+
+    procedure :: return_size_of_vector_fn
+    generic :: count => return_size_of_vector_fn
+
     generic :: append => append_char_sub, append_string_sub
 
 !    procedure :: push => push_string_fn
 !    procedure :: pop => pop_string_fn
+    procedure :: value => return_string_at_index_fn
+
     procedure :: grep => return_matching_lines_fn
+
+    procedure :: which => return_position_of_matching_text_fn
+
+    procedure :: deallocate => deallocate_all_list_items_sub
 
     procedure :: print => print_to_screen_sub
 
@@ -104,6 +119,7 @@ module strings
     procedure :: string_to_character_sub
     procedure :: character_to_string_sub
     procedure :: string_to_string_sub
+    procedure :: string_list_to_string_list_sub
   end interface assignment(=)
 
   interface operator(==)
@@ -133,6 +149,55 @@ module strings
   end interface assert
 
 contains
+
+  function return_size_of_vector_fn(this)   result(iResult)
+
+    class (T_STRING_LIST), intent(in) :: this
+    integer (kind=c_int)              :: iResult
+
+    iResult = this%iCount
+
+  end function return_size_of_vector_fn
+  
+
+
+  subroutine deallocate_all_list_items_sub(this)
+
+    class (T_STRING_LIST), intent(inout) :: this
+    
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int) :: iStat
+
+    if (this%iCount > 0) then
+
+      do iIndex = 1, this%iCount
+
+        call this%sl(iIndex)%deallocate()
+        
+      enddo
+
+    endif   
+
+
+  end subroutine deallocate_all_list_items_sub
+
+
+
+  subroutine deallocate_sub(this)
+
+    class (T_STRING), intent(inout) :: this
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iStat
+
+    if (allocated(this%sChars) )   deallocate(this%sChars, stat = iStat)
+
+    call assert(iStat == 0, "Failed to deallocate memory", &
+         __FILE__, __LINE__)
+
+   end subroutine deallocate_sub 
+
 
   function concatenate_string_string_fn(stString1, stString2)	   result(stConcatString)
 
@@ -267,6 +332,41 @@ contains
   
 
 
+  subroutine string_list_to_string_list_sub(stListOut, stListIn)
+
+    type (T_STRING_LIST), intent(inout) :: stListOut
+    type (T_STRING_LIST), intent(in)    :: stListIn
+
+    ! [ LOCALS ] 
+    integer (kind=c_int) :: iIndex
+
+    call stListOut%initialize()   ! nuke anything that exists in the list...
+
+    if (stListIn%iCount > 0) then
+
+      do iIndex = 1, stListIn%iCount
+        call stListOut%append(stListIn%sl(iIndex))
+      enddo
+
+    endif
+
+  end subroutine string_list_to_string_list_sub
+
+function return_string_at_index_fn(this, iIndex)  result(stString)
+
+  class (T_STRING_LIST), intent (in)   :: this
+  integer (kind=c_int)                 :: iIndex
+  type (T_STRING)                      :: stString
+
+  if ( ( iIndex >= lbound(this%sl,1) ) &
+      .and. ( iIndex <= ubound(this%sl,1) ) ) then
+
+    stString = this%sl(iIndex)
+
+  endif
+
+end function return_string_at_index_fn  
+
 
   subroutine string_to_string_sub(stStringOut, stStringIn)
 
@@ -300,6 +400,8 @@ contains
     
     ! [ LOCALS ]
     integer (kind=c_int) :: iIndex
+
+    if (allocated(stString%sChars))  deallocate(stString%sChars)
 
     allocate(stString%sChars(len_trim(sChar)))
 
@@ -336,6 +438,24 @@ contains
 
   end function convert_to_character_fn
 
+
+
+  pure function return_length_fn(this)     result(iValue)
+
+    class (T_STRING), intent(in) :: this
+    integer (kind=c_int) :: iValue
+
+    if (allocated(this%sChars)) then
+
+      iValue = size(this%sChars,1)
+
+    else
+
+      iValue = 0
+
+    endif 
+
+  end function return_length_fn
 
 
   pure function string_length_fn(stString)     result(iValue)
@@ -729,14 +849,18 @@ contains
     ! [ LOCALS ]
     integer (kind=c_int) :: iStat
 
-    if (.not. allocated(this%sl) ) then
+    if ( allocated(this%sl) ) then  
+
+      this%iCount = 0
+
+    else  
 
       allocate(this%sl(20), stat = iStat)
 
-    endif
+      call assert(iStat == 0, &
+          "Failed to allocate memory for list of string objects.")
 
-    call assert(iStat == 0, &
-        "Failed to allocate memory for list of string objects.")
+    endif
 
   end subroutine initialize_list_sub
 
@@ -762,6 +886,52 @@ contains
 
   end function return_matching_lines_fn
   
+
+
+  function return_position_of_matching_text_fn(this, sChar)     result(iResult)
+
+    class (T_STRING_LIST), intent(in)                    :: this
+    character (len=*), intent(in)                        :: sChar
+    integer (kind=c_int), dimension(:), allocatable      :: iResult
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int) :: iCount
+    integer (kind=c_int) :: iStat
+    integer (kind=c_int) :: iRetVal
+    integer (kind=c_int), dimension(this%iCount) :: iTempResult
+
+    iCount = 0
+
+    do iIndex=1, this%iCount
+
+      iRetval = index(string = this%sl(iIndex)%asCharacter(), &
+                      substring = sChar)
+
+      if (iRetval /= 0)  then
+
+        iCount = iCount + 1
+        iTempResult(iCount) = iIndex
+
+      endif
+
+    enddo  
+
+    if (iCount == 0) then
+
+      allocate(iResult(1), stat=iStat)
+      iResult(1) = -9999
+
+    else
+    
+      allocate(iResult(iCount), stat=iStat)
+      iResult(1:iCount) = iTempResult(1:iCount)
+
+    endif  
+
+  end function return_position_of_matching_text_fn
+
+
 
 
   subroutine append_string_sub(this, stString)

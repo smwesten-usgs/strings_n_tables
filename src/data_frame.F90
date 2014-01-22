@@ -34,12 +34,13 @@ type  T_DATA_COLUMN
   integer (kind=c_int), dimension(:), allocatable :: iData
   real (kind=c_float), dimension(:), allocatable :: fData
   real (kind=c_double), dimension(:), allocatable :: dData
+  logical (kind=c_bool), dimension(:), allocatable :: lMask
   type (T_STRING_LIST) :: stData
 
 contains
 
 	procedure :: new => create_new_column_sub
-!	procedure :: sum => sum_of_column_elements_fn
+	procedure :: sum => sum_of_column_elements_fn
 !	procedure :: mean => mean_of_column_elements_fn
 !	procedure :: min => minimum_of_column_elements_fn
 !	procedure :: max => maximum_of_column_elements_fn
@@ -75,8 +76,6 @@ contains
   procedure :: summarize_data_frame_sub
   generic :: summarize => summarize_data_frame_sub
 
-  procedure :: get_column_values_fn
-  generic :: getColVals => get_column_values_fn
 
 end type T_DATA_FRAME  
 
@@ -120,6 +119,36 @@ end type T_DATA_FILE
 
 
 contains
+
+  function sum_of_column_elements_fn(this)  result(dSum)
+
+    class(T_DATA_COLUMN), intent(in)       :: this
+    real (kind=c_double)                   :: dSum
+
+    select case (this%iDataType)
+
+      case (INTEGER_DATA)
+
+        dSum = sum(this%iData, this%lMask)
+
+      case (FLOAT_DATA)
+      
+        dSum = sum(this%fData, this%lMask)
+
+      case (DOUBLE_DATA)
+      
+        dSum = sum(this%dData, this%lMask)
+
+      case default
+      
+        dSum = -9999.      
+
+    end select
+
+  end function sum_of_column_elements_fn
+
+
+
 
   subroutine initialize_data_frame_sub(this, stColNames, iDataTypes, iRecordCount)
 
@@ -370,11 +399,14 @@ contains
 
     this%iDataType = iDataType
 
+    allocate( this%lMask(iCount), stat = iStat)
+    this%lMask = lTRUE
+
     select case(iDataType)
 
       case (INTEGER_DATA)
 
-        allocate( this%iData(iCount), stat=iStat )
+        allocate( this%iData(iCount), stat = iStat )
 
       case (FLOAT_DATA)
 
@@ -487,7 +519,8 @@ contains
 
            write (*, fmt="(5x, a, i8)") "Count: ", size(this%col(iIndex)%fData,1)
            write (*, fmt="(7x, a, g15.5)") "Min: ", minval(this%col(iIndex)%fData)           
-           write (*, fmt="(7x, a, g15.5)") "Max: ", maxval(this%col(iIndex)%fData)                      
+           write (*, fmt="(7x, a, g15.5)") "Max: ", maxval(this%col(iIndex)%fData) 
+           write (*, fmt="(7x, a, g15.5)") "Sum: ", this%col(iIndex)%sum()                     
 
         case (DOUBLE_DATA)
 

@@ -3,6 +3,7 @@ program dftest
   use iso_c_binding
   use strings
   use data_frame
+  use data_file
 
   implicit none
 
@@ -13,9 +14,13 @@ program dftest
   type (T_DATA_FRAME) :: df
   type (T_STRING_LIST) :: stHeader	
 
+  logical (kind=c_bool), parameter :: lFALSE = .false.
+  logical (kind=c_bool), parameter :: lTRUE = .true.
+
+
   integer (kind=c_int), dimension(:), allocatable :: iDataType
 
-  call tFile%openFile("rjh_21Nov13_Sample Lake.5.DMCM_fish_concs.csv")
+  call tFile%open("rjh_21Nov13_Sample Lake.5.DMCM_fish_concs.csv")
 
   stHeader = tFile%readHeader()
 
@@ -23,11 +28,11 @@ program dftest
 
   iDataType = FLOAT_DATA
 
-  call df%initialize(stHeader, iDataType, tFile%iRecordCount)
+  call df%initialize(stHeader, iDataType, tFile%numrecords())
 
-  do while (tFile%lIsOpen)
+  do while (tFile%isOpen() )
 
-    stString = tFile%getRow()
+    stString = tFile%readLine()
 
     call df%rowvals(stString, ",")
 

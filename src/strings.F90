@@ -29,45 +29,45 @@ module strings
 
   contains
 
-    procedure :: is_string_numeric_fn
-    generic, public :: isNumeric => is_string_numeric_fn
+    procedure, private :: is_string_numeric_fn
+    generic, public    :: isNumeric => is_string_numeric_fn
 
-    procedure :: is_string_an_integer_fn
-    generic, public :: isInteger => is_string_an_integer_fn 
+    procedure, private :: is_string_an_integer_fn
+    generic, public    :: isInteger => is_string_an_integer_fn 
 
-    procedure :: convert_to_int_fn
-    generic, public :: asInt => convert_to_int_fn
+    procedure, private :: convert_to_int_fn
+    generic, public    :: asInt => convert_to_int_fn
 
-    procedure :: convert_to_float_fn
-    generic, public :: asFloat => convert_to_float_fn
+    procedure, private :: convert_to_float_fn
+    generic, public    :: asFloat => convert_to_float_fn
 
-    procedure :: convert_to_double_fn
-    generic, public :: asDouble => convert_to_double_fn
+    procedure, private :: convert_to_double_fn
+    generic, public    :: asDouble => convert_to_double_fn
 
-    procedure :: convert_to_character_fn 
-    generic, public :: asCharacter => convert_to_character_fn 
+    procedure, private :: convert_to_character_fn 
+    generic, public    :: asCharacter => convert_to_character_fn 
 
-    procedure :: convert_to_uppercase_sub
-    procedure :: convert_to_uppercase_fn
-    generic, public :: toUppercase => convert_to_uppercase_sub
-    generic, public :: asUppercase => convert_to_uppercase_fn
+    procedure, private :: convert_to_uppercase_sub
+    procedure, private :: convert_to_uppercase_fn
+    generic, public    :: toUppercase => convert_to_uppercase_sub
+    generic, public    :: asUppercase => convert_to_uppercase_fn
 
-    procedure :: convert_to_lowercase_sub
-    procedure :: convert_to_lowercase_fn
-    generic, public :: toLowercase => convert_to_lowercase_sub
-    generic, public :: asLowercase => convert_to_lowercase_fn
+    procedure, private :: convert_to_lowercase_sub
+    procedure, private :: convert_to_lowercase_fn
+    generic, public    :: toLowercase => convert_to_lowercase_sub
+    generic, public    :: asLowercase => convert_to_lowercase_fn
 
-    procedure :: split_and_return_text_fn
-    generic, public :: chomp => split_and_return_text_fn
+    procedure, private :: split_and_return_text_fn
+    generic, public    :: chomp => split_and_return_text_fn
  
-    procedure :: replace_character_sub
-    generic, public :: replace => replace_character_sub
+    procedure, private :: replace_character_sub
+    generic, public    :: replace => replace_character_sub
 
-    procedure :: return_length_fn
-    generic, public :: length => return_length_fn
+    procedure, private :: return_length_fn
+    generic, public    :: length => return_length_fn
 
-    procedure :: deallocate_sub
-    generic, public :: deallocate => deallocate_sub
+    procedure, private :: deallocate_sub
+    generic, public    :: deallocate => deallocate_sub
 
   end type T_STRING
 
@@ -78,27 +78,31 @@ module strings
 
   contains
   
-    procedure :: initialize => initialize_list_sub
+    procedure, private :: initialize => initialize_list_sub
 
-    procedure :: append_string_sub
-    procedure :: append_char_sub
+    procedure, private :: append_string_sub
+    procedure, private :: append_char_sub
+    generic, public    :: append => append_char_sub, append_string_sub
 
-    procedure :: return_size_of_vector_fn
-    generic :: count => return_size_of_vector_fn
-
-    generic :: append => append_char_sub, append_string_sub
+    procedure, private :: return_size_of_vector_fn
+    generic, public    :: count => return_size_of_vector_fn
 
 !    procedure :: push => push_string_fn
 !    procedure :: pop => pop_string_fn
-    procedure :: value => return_string_at_index_fn
+    procedure, private :: return_string_at_index_fn
+    generic, public    :: value => return_string_at_index_fn
 
-    procedure :: grep => return_matching_lines_fn
+    procedure, private :: return_matching_lines_fn
+    generic, public    :: grep => return_matching_lines_fn
 
-    procedure :: which => return_position_of_matching_text_fn
+    procedure, private :: return_position_of_matching_text_fn
+    generic, public    :: which => return_position_of_matching_text_fn
 
-    procedure :: deallocate => deallocate_all_list_items_sub
+    procedure, private :: deallocate_all_list_items_sub
+    generic, public    :: deallocate => deallocate_all_list_items_sub
 
-    procedure :: print => print_to_screen_sub
+    procedure, private :: print_to_screen_sub
+    generic, public    :: print => print_to_screen_sub
 
   end type T_STRING_LIST	
 

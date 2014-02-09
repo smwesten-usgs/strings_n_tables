@@ -2,27 +2,13 @@ module data_file
 
   use iso_c_binding, only : c_int, c_float, c_double, c_bool
   use iso_fortran_env, only : IOSTAT_END
+  use types
   use strings
   implicit none
 
   private
 
-  character (len=2), parameter :: sWHITESPACE = achar(9)//" "
-  character (len=1), parameter :: sBACKSLASH = achar(92)
-  character (len=1), parameter :: sCOMMENT_CHARS = "#"
-  character (len=1), parameter :: sFORWARDSLASH = achar(47)
-  character (len=1), parameter :: sRETURN = achar(13)
-
-  integer (kind=c_int), parameter :: INTEGER_DATA = 1
-  integer (kind=c_int), parameter :: FLOAT_DATA = 2
-  integer (kind=c_int), parameter :: DOUBLE_DATA = 3
-  integer (kind=c_int), parameter :: T_STRING_DATA = 4
-
-  logical (kind=c_bool), parameter :: lFALSE = .false.
-  logical (kind=c_bool), parameter :: lTRUE = .true.
-
   character (len=8192) :: sBuf
-
 
   type, public :: T_DATA_FILE
 

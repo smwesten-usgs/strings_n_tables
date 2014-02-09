@@ -3,24 +3,10 @@ module data_frame
 use iso_c_binding, only : c_int, c_float, c_double, c_bool
 use iso_fortran_env, only : IOSTAT_END
 use strings
+use types
 implicit none
 
 private
-
-character (len=2), parameter :: sWHITESPACE = achar(9)//" "
-character (len=1), parameter :: sBACKSLASH = achar(92)
-character (len=1), parameter :: sFORWARDSLASH = achar(47)
-character (len=1), parameter :: sRETURN = achar(13)
-
-integer (kind=c_int), parameter :: INTEGER_DATA = 1
-integer (kind=c_int), parameter :: FLOAT_DATA = 2
-integer (kind=c_int), parameter :: DOUBLE_DATA = 3
-integer (kind=c_int), parameter :: T_STRING_DATA = 4
-
-logical (kind=c_bool), parameter :: lFALSE = .false.
-logical (kind=c_bool), parameter :: lTRUE = .true.
-
-character (len=8192) :: sBuf
 
 public :: FLOAT_DATA, INTEGER_DATA, DOUBLE_DATA
 public :: T_DATA_FRAME, T_DATA_COLUMN
@@ -44,6 +30,19 @@ generic, public    :: new => create_new_column_sub
 
 procedure, private :: sum_of_column_elements_fn
 generic, public    :: sum => sum_of_column_elements_fn
+
+
+procedure, private :: min_of_column_elements_fn
+generic, public    :: min => min_of_column_elements_fn
+
+procedure, private :: max_of_column_elements_fn
+generic, public    :: max => max_of_column_elements_fn
+
+procedure, private :: count_of_column_elements_fn
+generic, public    :: count => count_of_column_elements_fn
+
+procedure, private :: mean_of_column_elements_fn
+generic, public    :: mean => mean_of_column_elements_fn
 
 ! procedure :: mean => mean_of_column_elements_fn
 ! procedure :: min => minimum_of_column_elements_fn
@@ -112,6 +111,110 @@ function sum_of_column_elements_fn(this) result(dSum)
     end select
 
 end function sum_of_column_elements_fn
+
+
+
+function mean_of_column_elements_fn(this) result(dMean)
+
+    class(T_DATA_COLUMN), intent(in) :: this
+    real (kind=c_double) :: dMean
+
+    ! [ LOCALS ]
+    real (kind=c_double) :: dCount
+    dCount = this%count()
+
+    select case (this%iDataType)
+
+      case (INTEGER_DATA)
+
+        dMean = sum(this%iData, this%lMask) / dCount
+
+      case (FLOAT_DATA)
+      
+        dMean = sum(this%fData, this%lMask) / dCount
+
+      case (DOUBLE_DATA)
+      
+        dMean = sum(this%dData, this%lMask) / dCount
+
+      case default
+      
+        dMean = -9999.
+
+    end select
+
+end function mean_of_column_elements_fn
+
+
+
+
+function min_of_column_elements_fn(this) result(dMin)
+
+    class(T_DATA_COLUMN), intent(in) :: this
+    real (kind=c_double) :: dMin
+
+    select case (this%iDataType)
+
+      case (INTEGER_DATA)
+
+        dMin = minval(this%iData, this%lMask)
+
+      case (FLOAT_DATA)
+      
+        dMin = minval(this%fData, this%lMask)
+
+      case (DOUBLE_DATA)
+      
+        dMin = minval(this%dData, this%lMask)
+
+      case default
+      
+        dMin = -9999.
+
+    end select
+
+end function min_of_column_elements_fn
+
+
+
+function max_of_column_elements_fn(this) result(dMax)
+
+    class(T_DATA_COLUMN), intent(in) :: this
+    real (kind=c_double) :: dMax
+
+    select case (this%iDataType)
+
+      case (INTEGER_DATA)
+
+        dMax = maxval(this%iData, this%lMask)
+
+      case (FLOAT_DATA)
+      
+        dMax = maxval(this%fData, this%lMask)
+
+      case (DOUBLE_DATA)
+      
+        dMax = maxval(this%dData, this%lMask)
+
+      case default
+      
+        dMax = -9999.
+
+    end select
+
+end function max_of_column_elements_fn
+
+
+
+function count_of_column_elements_fn(this) result(dCount)
+
+    class(T_DATA_COLUMN), intent(in) :: this
+    real (kind=c_double) :: dCount  
+
+    dCount = count(this%lMask)
+
+    
+end function count_of_column_elements_fn
 
 
 
@@ -273,34 +376,14 @@ enddo
 
       write(*, "(/,a)") "Variable name: "//trim(sChar)
 
-      select case (this%iDataTypes(iIndex) )
- 
-        case (INTEGER_DATA)
 
-           write (*, fmt="(5x, a, i8)") "Count: ", size(this%col(iIndex)%iData,1)
-           write (*, fmt="(7x, a, i8)") "Min: ", minval(this%col(iIndex)%iData)
-           write (*, fmt="(7x, a, i8)") "Max: ", maxval(this%col(iIndex)%iData)
+      write (*, fmt="(5x, a, i8)") "Count: ", int( this%col(iIndex)%count() )
+      write (*, fmt="(7x, a, g15.5)") "Min: ", this%col(iIndex)%min()
+      write (*, fmt="(7x, a, g15.5)") "Max: ", this%col(iIndex)%max()
+      write (*, fmt="(7x, a, g15.5)") "Sum: ", this%col(iIndex)%sum()
+      write (*, fmt="(7x, a, g15.5)") "Mean: ", this%col(iIndex)%mean()
 
-
-
-        case (FLOAT_DATA)
-
-           write (*, fmt="(5x, a, i8)") "Count: ", size(this%col(iIndex)%fData,1)
-           write (*, fmt="(7x, a, g15.5)") "Min: ", minval(this%col(iIndex)%fData)
-           write (*, fmt="(7x, a, g15.5)") "Max: ", maxval(this%col(iIndex)%fData)
-           write (*, fmt="(7x, a, g15.5)") "Sum: ", this%col(iIndex)%sum()
-
-        case (DOUBLE_DATA)
-
-           write (*, fmt="(5x, a, i8)") "Count: ", size(this%col(iIndex)%dData,1)
-           write (*, fmt="(7x, a, g16.7)") "Min: ", minval(this%col(iIndex)%dData)
-           write (*, fmt="(7x, a, g16.7)") "Max: ", maxval(this%col(iIndex)%dData)
-
-        case (T_STRING_DATA)
-
-      end select
-
-enddo
+     enddo 
 
 
   end subroutine summarize_data_frame_sub

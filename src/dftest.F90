@@ -2,8 +2,10 @@ program dftest
 
   use iso_c_binding
   use strings
+  use string_list
   use data_frame
   use data_file
+  use types
 
   implicit none
 
@@ -13,10 +15,6 @@ program dftest
   type (T_STRING_LIST) :: stl
   type (T_DATA_FRAME) :: df
   type (T_STRING_LIST) :: stHeader	
-
-  logical (kind=c_bool), parameter :: lFALSE = .false.
-  logical (kind=c_bool), parameter :: lTRUE = .true.
-
 
   integer (kind=c_int), dimension(:), allocatable :: iDataType
 

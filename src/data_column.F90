@@ -10,62 +10,118 @@ implicit none
 
 private
 
-public :: T_DATA_COLUMN
-
-type T_DATA_COLUMN
+type, public :: T_DATA_COLUMN
 
   integer (kind=c_int), private :: iCurrentRecord = 0
   integer (kind=c_int), private :: iOrder
   integer (kind=c_int), private :: iDataType
   integer (kind=c_int) :: iCount
-  integer (kind=c_int), dimension(:), allocatable, public  :: iData
-  real (kind=c_float), dimension(:), allocatable, public   :: fData
-  real (kind=c_double), dimension(:), allocatable, public  :: dData
-  type (T_DATETIME), dimension(:), pointer, public         :: pDatetime
   logical (kind=c_bool), dimension(:), allocatable, public :: lMask
-  type (T_STRING_LIST), allocatable, public :: stData
 
 contains
 
-  procedure, private :: create_new_column_sub
-  generic, public    :: new => create_new_column_sub
+  private
+!  procedure, private :: create_new_column_sub
+  procedure, public    :: new => create_new_column_sub
 
-  procedure, private :: put_next_integer_value_fn
-  procedure, private :: put_next_float_value_fn
-  procedure, private :: put_next_double_value_fn
-  procedure, private :: put_next_string_value_fn
-  procedure, private :: put_next_date_value_fn
-  generic, public    :: putval => put_next_integer_value_fn, &
-                                  put_next_float_value_fn, &
-                                  put_next_double_value_fn, &
-                                  put_next_date_value_fn, &
-                                  put_next_string_value_fn
+!   procedure, private :: put_next_integer_value_fn
+!   procedure, private :: put_next_float_value_fn
+!   procedure, private :: put_next_double_value_fn
+!   procedure, private :: put_next_string_value_fn
+!   procedure, private :: put_next_datetime_value_fn
+!   generic, public    :: putval => put_next_integer_value_fn, &
+!                                   put_next_float_value_fn, &
+!                                   put_next_double_value_fn, &
+!                                   put_next_datetime_value_fn, &
+!                                   put_next_string_value_fn
 
-  procedure, private :: sum_of_column_elements_fn
-  generic, public    :: sum => sum_of_column_elements_fn
+!  procedure, private :: sum_of_column_elements_fn
+  procedure, public    :: sum => sum_of_column_elements_fn
 
-  procedure, private :: return_current_record_number_fn
-  generic, public    :: currentRecnum => return_current_record_number_fn
+!  procedure, private :: return_current_record_number_fn
+  procedure, public    :: currentRecnum => return_current_record_number_fn
 
-  procedure, private :: increment_current_record_number_fn
-  generic, public    :: incrementRecnum => increment_current_record_number_fn
+!  procedure, private :: increment_current_record_number_fn
+  procedure, public    :: incrementRecnum => increment_current_record_number_fn
 
-  procedure, private :: return_data_type_fn
-  generic, public    :: datatype => return_data_type_fn
+!  procedure, private :: return_data_type_fn
+  procedure, public    :: datatype => return_data_type_fn
 
-  procedure, private :: min_of_column_elements_fn
-  generic, public    :: min => min_of_column_elements_fn
+!  procedure, private :: min_of_column_elements_fn
+  procedure, public    :: min => min_of_column_elements_fn
 
-  procedure, private :: max_of_column_elements_fn
-  generic, public    :: max => max_of_column_elements_fn
+!  procedure, private :: max_of_column_elements_fn
+  procedure, public    :: max => max_of_column_elements_fn
 
-  procedure, private :: count_of_column_elements_fn
-  generic, public    :: count => count_of_column_elements_fn
+!  procedure, private :: count_of_column_elements_fn
+  procedure, public    :: count => count_of_column_elements_fn
 
-  procedure, private :: mean_of_column_elements_fn
-  generic, public    :: mean => mean_of_column_elements_fn
+!  procedure, private :: mean_of_column_elements_fn
+  procedure, public    :: mean => mean_of_column_elements_fn
 
 end type T_DATA_COLUMN
+
+!------
+
+type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_INTEGER
+
+  integer (kind=c_int), dimension(:), allocatable, private  :: iData
+
+contains 
+
+  procedure, public :: putval => put_next_integer_value_fn
+
+end type T_DATA_COLUMN_INTEGER
+
+!------
+
+type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_FLOAT
+
+  real (kind=c_float), dimension(:), allocatable, private   :: fData
+
+contains 
+
+  procedure, public :: putval => put_next_float_value_fn
+
+end type T_DATA_COLUMN_FLOAT
+
+!------
+
+type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_DOUBLE
+
+  real (kind=c_double), dimension(:), allocatable, private  :: dData
+
+contains
+
+  procedure, public :: putval => put_next_double_value_fn
+
+end type T_DATA_COLUMN_DOUBLE
+
+!------
+
+type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_DATETIME
+
+  type (T_DATETIME), dimension(:), pointer, private         :: pDatetime
+
+contains
+
+  procedure, public :: putval => put_next_datetime_value_fn
+
+end type T_DATA_COLUMN_DATETIME
+
+!------
+
+type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_STRING
+
+  type (T_STRING_LIST), private                             :: stData
+
+contains
+
+  procedure, public :: putval => put_next_string_value_fn
+
+end type T_DATA_COLUMN_STRING
+
+!------
 
 
 
@@ -73,7 +129,7 @@ contains
 
   function put_next_integer_value_fn(this, iValue)   result(iRecNum)
 
-    class (T_DATA_COLUMN), intent(inout)   :: this
+    class (T_DATA_COLUMN_INTEGER), intent(inout)   :: this
     integer (kind=c_int), intent(in)    :: iValue
     integer (kind=c_int)                :: iRecNum
 
@@ -87,7 +143,7 @@ contains
 
   function put_next_float_value_fn(this, fValue)   result(iRecNum)
 
-    class (T_DATA_COLUMN), intent(inout)   :: this
+    class (T_DATA_COLUMN_FLOAT), intent(inout)   :: this
     real (kind=c_float), intent(in)     :: fValue
     integer (kind=c_int)                :: iRecNum
 
@@ -101,7 +157,7 @@ contains
 
   function put_next_double_value_fn(this, dValue)   result(iRecNum)
 
-    class (T_DATA_COLUMN), intent(inout)   :: this
+    class (T_DATA_COLUMN_DOUBLE), intent(inout)   :: this
     real (kind=c_double), intent(in)    :: dValue
     integer (kind=c_int)                :: iRecNum
 
@@ -115,7 +171,7 @@ contains
 
   function put_next_datetime_value_fn(this, stDatetime)   result(iRecNum)
 
-    class (T_DATA_COLUMN), intent(inout)   :: this
+    class (T_DATA_COLUMN_DATETIME), intent(inout)   :: this
     type (T_STRING), intent(in)            :: stDatetime
     integer (kind=c_int)                   :: iRecNum
 
@@ -133,7 +189,7 @@ contains
 
   function put_next_string_value_fn(this, stString)   result(iRecNum)
 
-    class (T_DATA_COLUMN), intent(inout)   :: this
+    class (T_DATA_COLUMN_STRING), intent(inout)   :: this
     type (T_STRING)                     :: stString
     integer (kind=c_int)                :: iRecNum
 
@@ -183,7 +239,33 @@ contains
     class (T_DATA_COLUMN), intent(in) :: this
     integer (kind=c_int)              :: iDataType
 
-    iDataType = this%iDataType
+    select type(this)
+
+      type is (T_DATA_COLUMN_INTEGER)
+
+        iDataType = INTEGER_DATA
+
+      type is (T_DATA_COLUMN_FLOAT)  
+
+        iDataType = FLOAT_DATA
+
+      type is (T_DATA_COLUMN_DOUBLE)  
+
+        iDataType = DOUBLE_DATA
+
+      type is (T_DATA_COLUMN_DATETIME)  
+
+        iDataType = T_DATETIME_DATA
+
+      type is (T_DATA_COLUMN_STRING)  
+
+        iDataType = T_STRING_DATA
+
+      class default
+    
+        iDataType = -9999
+
+    end select  
 
   end function return_data_type_fn  
 
@@ -194,21 +276,21 @@ contains
     class(T_DATA_COLUMN), intent(in) :: this
     real (kind=c_double) :: dSum
 
-    select case (this%iDataType)
+    select type (this)
 
-      case (INTEGER_DATA)
+      type is (T_DATA_COLUMN_INTEGER)
 
         dSum = sum(this%iData, this%lMask)
 
-      case (FLOAT_DATA)
+      type is (T_DATA_COLUMN_FLOAT)
       
         dSum = sum(this%fData, this%lMask)
 
-      case (DOUBLE_DATA)
+      type is (T_DATA_COLUMN_DOUBLE)
       
         dSum = sum(this%dData, this%lMask)
 
-      case default
+      class default
       
         dSum = -9999.
 
@@ -227,21 +309,21 @@ contains
     real (kind=c_double) :: dCount
     dCount = this%count()
 
-    select case (this%iDataType)
+    select type (this)
 
-      case (INTEGER_DATA)
+      type is (T_DATA_COLUMN_INTEGER)
 
         dMean = sum(this%iData, this%lMask) / dCount
 
-      case (FLOAT_DATA)
+      type is (T_DATA_COLUMN_FLOAT)
       
         dMean = sum(this%fData, this%lMask) / dCount
 
-      case (DOUBLE_DATA)
+      type is (T_DATA_COLUMN_DOUBLE)
       
         dMean = sum(this%dData, this%lMask) / dCount
 
-      case default
+      class default
       
         dMean = -9999.
 
@@ -256,21 +338,21 @@ contains
     class(T_DATA_COLUMN), intent(in) :: this
     real (kind=c_double) :: dMin
 
-    select case (this%iDataType)
+    select type (this)
 
-      case (INTEGER_DATA)
+      type is (T_DATA_COLUMN_INTEGER)
 
         dMin = minval(this%iData, this%lMask)
 
-      case (FLOAT_DATA)
+      type is (T_DATA_COLUMN_FLOAT)
       
         dMin = minval(this%fData, this%lMask)
 
-      case (DOUBLE_DATA)
+      type is (T_DATA_COLUMN_DOUBLE)
       
         dMin = minval(this%dData, this%lMask)
 
-      case default
+      class default
       
         dMin = -9999.
 
@@ -285,21 +367,21 @@ contains
     class(T_DATA_COLUMN), intent(in) :: this
     real (kind=c_double) :: dMax
 
-    select case (this%iDataType)
+    select type (this)
 
-      case (INTEGER_DATA)
+      type is (T_DATA_COLUMN_INTEGER)
 
         dMax = maxval(this%iData, this%lMask)
 
-      case (FLOAT_DATA)
+      type is (T_DATA_COLUMN_FLOAT)
       
         dMax = maxval(this%fData, this%lMask)
 
-      case (DOUBLE_DATA)
+      type is (T_DATA_COLUMN_DOUBLE)
       
         dMax = maxval(this%dData, this%lMask)
 
-      case default
+      class default
       
         dMax = -9999.
 
@@ -321,45 +403,42 @@ contains
 
 !--------------------------------------------------------------------
 
-  subroutine create_new_column_sub(this, iDataType, iCount)
+  subroutine create_new_column_sub(this, iCount)
 
     class (T_DATA_COLUMN) :: this
-    integer (kind=c_int), intent(in) :: iDataType
     integer (kind=c_int),intent(in) :: iCount
 
     ! [ LOCALS ]
     integer (kind=c_int) :: iStat
-
-    this%iDataType = iDataType
 
     !> lMask entries will be used later on to assist in 
     !> subsetting of particular chunks of data
     allocate( this%lMask(iCount), stat = iStat)
     this%lMask = lTRUE
 
-    select case(iDataType)
+    select type (this)
 
-      case (INTEGER_DATA)
+      type is (T_DATA_COLUMN_INTEGER)
 
         allocate( this%iData(iCount), stat = iStat )
 
-      case (FLOAT_DATA)
+      type is (T_DATA_COLUMN_FLOAT)
 
         allocate( this%fData(iCount), stat = iStat)
 
-      case (DOUBLE_DATA)
+      type is (T_DATA_COLUMN_DOUBLE)
 
         allocate( this%dData(iCount), stat = iStat)
 
-      case (T_STRING_DATA)
+      type is (T_DATA_COLUMN_STRING)
 
         iStat = 0
 
-      case (T_DATETIME_DATA)
+      type is (T_DATA_COLUMN_DATETIME)
 
         allocate( this%pDatetime(iCount), stat=iStat)
 
-      case default
+      class default
 
         call assert(lFALSE, "Internal programming error", &
             __FILE__, __LINE__)

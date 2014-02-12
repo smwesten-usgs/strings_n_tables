@@ -51,7 +51,9 @@ module datetime
     generic, public    :: calcWaterYear => calc_water_year_sub
 
     procedure, private :: parse_text_to_date_sub
-    generic, public    :: parseDate => parse_text_to_date_sub
+    procedure, private :: parse_string_to_date_sub
+    generic, public    :: parseDate => parse_text_to_date_sub, &
+                                       parse_string_to_date_sub
 
     procedure, private :: parse_text_to_time_sub
     generic, public    :: parseTime => parse_text_to_time_sub

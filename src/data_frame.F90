@@ -17,7 +17,7 @@ type T_DATA_FRAME
 
   integer (kind=c_int), dimension(:), allocatable :: iDataTypes
   type (T_STRING_LIST) :: stColNames
-  type (T_DATA_COLUMN), dimension(:), allocatable :: col
+  class (T_DATA_COLUMN), dimension(:), allocatable :: col
   integer (kind=c_int) :: iCount
 
 contains
@@ -65,10 +65,23 @@ contains
 
     do iIndex = 1, this%iCount
 
-      !> create a new column space for each item detected in the header
-      call this%col(iIndex)%new(iDataType = this%iDataTypes(iIndex), &
-                                iCount = iRecordCount)
+      associate ( current_column => this%col(iIndex) )
 
+        select case ( this%iDataTypes(iIndex) )
+
+          case (INTEGER_DATA)
+
+            allocate(T_DATA_COLUMN_INTEGER:this%col(iIndex))
+            call current_column%new( iCount = iRecordCount )
+      !> create a new column space for each item detected in the header
+!      call this%col(iIndex)%new(iDataType = this%iDataTypes(iIndex), &
+!                                iCount = iRecordCount)
+          case default
+
+        end select
+        
+      end associate 
+          
       stString = this%stColNames%value(iIndex)
 
       sChar = stString%asCharacter()
@@ -91,6 +104,7 @@ contains
     integer (kind=c_int) :: iIndex
     integer (kind=c_int) :: iColNum, iRowNum
     type (T_STRING) :: stSubString
+    type (T_DATA_COLUMN) :: tCol
 
     iIndex = 0
 
@@ -101,24 +115,36 @@ contains
       iIndex = iIndex + 1
 
       iRowNum = this%col(iIndex)%incrementRecnum()
+
+      associate ( tCol => this%col(iIndex) )
       
-      select case (this%col(iIndex)%datatype() )
+        select type ( tCol )
  
-        case (INTEGER_DATA)
+          type is (T_DATA_COLUMN_INTEGER)
 
-          this%col(iIndex)%iData(iRowNum) = stSubString%asInt()
+            call tCol%putval( stSubString%asInt() )
 
-        case (FLOAT_DATA)
+          type is (T_DATA_COLUMN_FLOAT)
 
-          this%col(iIndex)%fData(iRowNum) = stSubString%asFloat()
+            call tCol%putval( stSubString%asFloat() )
 
-        case (DOUBLE_DATA)
+          type is (T_DATA_COLUMN_DOUBLE)
 
-          this%col(iIndex)%dData(iRowNum) = stSubString%asDouble()
+            call tCol%putval( stSubString%asDouble() )
 
-        case (T_STRING_DATA)
+          type is (T_DATA_COLUMN_DATETIME)
 
-      end select
+            call tCol%putval( stSubString )
+
+          type is (T_DATA_COLUMN_STRING)  
+
+            call tCol%putval( stSubstring )
+
+          class default 
+
+        end select
+
+      end associate
 
     enddo
 

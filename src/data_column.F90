@@ -4,6 +4,7 @@ use iso_c_binding, only : c_int, c_float, c_double, c_bool
 use iso_fortran_env, only : IOSTAT_END
 use strings
 use string_list
+use datetime
 use types
 implicit none
 
@@ -17,9 +18,10 @@ type T_DATA_COLUMN
   integer (kind=c_int), private :: iOrder
   integer (kind=c_int), private :: iDataType
   integer (kind=c_int) :: iCount
-  integer (kind=c_int), dimension(:), allocatable, public :: iData
-  real (kind=c_float), dimension(:), allocatable, public :: fData
-  real (kind=c_double), dimension(:), allocatable, public :: dData
+  integer (kind=c_int), dimension(:), allocatable, public  :: iData
+  real (kind=c_float), dimension(:), allocatable, public   :: fData
+  real (kind=c_double), dimension(:), allocatable, public  :: dData
+  type (T_DATETIME), dimension(:), pointer, public         :: pDatetime
   logical (kind=c_bool), dimension(:), allocatable, public :: lMask
   type (T_STRING_LIST), allocatable, public :: stData
 
@@ -32,9 +34,11 @@ contains
   procedure, private :: put_next_float_value_fn
   procedure, private :: put_next_double_value_fn
   procedure, private :: put_next_string_value_fn
+  procedure, private :: put_next_date_value_fn
   generic, public    :: putval => put_next_integer_value_fn, &
                                   put_next_float_value_fn, &
                                   put_next_double_value_fn, &
+                                  put_next_date_value_fn, &
                                   put_next_string_value_fn
 
   procedure, private :: sum_of_column_elements_fn
@@ -106,6 +110,24 @@ contains
     iRecNum = this%incrementRecnum()
 
   end function put_next_double_value_fn
+
+!--------------------------------------------------------------------
+
+  function put_next_datetime_value_fn(this, stDatetime)   result(iRecNum)
+
+    class (T_DATA_COLUMN), intent(inout)   :: this
+    type (T_STRING), intent(in)            :: stDatetime
+    integer (kind=c_int)                   :: iRecNum
+
+    ! [ LOCALS ]
+    type (T_DATETIME), pointer :: pDT
+
+    iRecNum = this%currentRecnum()
+    pDT => this%pDatetime(iRecNum)
+    call pDT%parseDate( stDatetime ) 
+    iRecNum = this%incrementRecnum()
+
+  end function put_next_datetime_value_fn
 
 !--------------------------------------------------------------------
 
@@ -310,6 +332,8 @@ contains
 
     this%iDataType = iDataType
 
+    !> lMask entries will be used later on to assist in 
+    !> subsetting of particular chunks of data
     allocate( this%lMask(iCount), stat = iStat)
     this%lMask = lTRUE
 
@@ -330,6 +354,10 @@ contains
       case (T_STRING_DATA)
 
         iStat = 0
+
+      case (T_DATETIME_DATA)
+
+        allocate( this%pDatetime(iCount), stat=iStat)
 
       case default
 

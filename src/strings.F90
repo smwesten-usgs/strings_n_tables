@@ -16,56 +16,76 @@ module strings
 
   contains
 
+    !> DOXYGEN_IMPL strings::is_string_numeric_fn
     procedure, private :: is_string_numeric_fn
     generic, public    :: isNumeric => is_string_numeric_fn
 
+    !> DOXYGEN_IMPL strings::is_string_an_integer_fn
     procedure, private :: is_string_an_integer_fn
     generic, public    :: isInteger => is_string_an_integer_fn 
 
+    !> DOXYGEN_IMPL strings::convert_to_int_fn
     procedure, private :: convert_to_int_fn
     generic, public    :: asInt => convert_to_int_fn
 
+    !> DOXYGEN_IMPL strings::convert_to_float_fn
     procedure, private :: convert_to_float_fn
     generic, public    :: asFloat => convert_to_float_fn
 
-    procedure, private :: convert_to_double_fn
-    !> @sa convert_to_double_fn
-    generic, public    :: asDouble => convert_to_double_fn
+    !> DOXYGEN_IMPL strings::convert_to_double_fn
+    procedure, private :: convert_to_double_fn       
+    generic, public    :: asDouble => convert_to_double_fn  
 
+    !> DOXYGEN_IMPL strings::convert_to_character_fn
     procedure, private :: convert_to_character_fn 
     generic, public    :: asCharacter => convert_to_character_fn 
 
+    !> DOXYGEN_IMPL strings::convert_to_uppercase_sub
     procedure, private :: convert_to_uppercase_sub
-    procedure, private :: convert_to_uppercase_fn
     generic, public    :: toUppercase => convert_to_uppercase_sub
+
+    !> DOXYGEN_IMPL strings::convert_to_uppercase_fn
+    procedure, private :: convert_to_uppercase_fn
     generic, public    :: asUppercase => convert_to_uppercase_fn
 
+    !> DOXYGEN_IMPL strings::convert_to_lowercase_sub
     procedure, private :: convert_to_lowercase_sub
-    procedure, private :: convert_to_lowercase_fn
     generic, public    :: toLowercase => convert_to_lowercase_sub
+
+    !> DOXYGEN_IMPL strings::convert_to_lowercase_fn
+    procedure, private :: convert_to_lowercase_fn
     generic, public    :: asLowercase => convert_to_lowercase_fn
 
+    !> DOXYGEN_IMPL strings::split_and_return_text_fn
     procedure, private :: split_and_return_text_fn
     generic, public    :: chomp => split_and_return_text_fn
  
+    !> DOXYGEN_IMPL strings::replace_character_sub
     procedure, private :: replace_character_sub
     generic, public    :: replace => replace_character_sub
 
+    !> DOXYGEN_IMPL strings::return_length_fn
     procedure, private :: return_length_fn
     generic, public    :: length => return_length_fn
 
+    !> DOXYGEN_IMPL strings::remove_chars_from_string_fn
+    procedure, private :: remove_chars_from_string_fn
+    generic, public    :: remove => remove_chars_from_string_fn
+
+    !> DOXYGEN_IMPL strings::deallocate_sub
     procedure, private :: deallocate_sub
     generic, public    :: deallocate => deallocate_sub
 
   end type T_STRING
 
   public :: operator(+), assignment(=), operator(==)
-  public :: len, assert
+  public :: len, assert, dquote
 
   interface operator(+)
     procedure :: concatenate_string_string_fn
     procedure :: concatenate_string_int_fn
     procedure :: concatenate_string_char_fn
+    procedure :: concatenate_char_string_fn
     procedure :: concatenate_string_real_fn
     !procedure :: concatenate_int_string_fn
     !procedure :: concatenate_real_string_fb
@@ -99,12 +119,36 @@ module strings
     procedure :: string_length_fn
   end interface len
 
+  interface dquote
+    procedure :: dquote_char_fn
+    procedure :: dquote_string_fn
+  end interface dquote
+
   interface assert
      procedure :: assert_4bit
      procedure :: assert_1bit
   end interface assert
 
 contains
+
+  function dquote_char_fn(sChar)    result(sCharOut)
+
+    character (len=*), intent(in) :: sChar
+    character (len=len_trim(sChar)+2) :: sCharOut
+
+    sCharOut = '"'//trim(sChar)//'"'
+
+  end function dquote_char_fn
+   
+  function dquote_string_fn(stString)   result(stStringOut)
+
+    type (T_STRING), intent(in) :: stString
+    type (T_STRING)             :: stStringOut
+
+    stStringOut = sDOUBLEQUOTE + stString + sDOUBLEQUOTE
+
+  end function dquote_string_fn
+    
 
   subroutine deallocate_sub(this)
 
@@ -151,6 +195,37 @@ contains
     enddo  
 
   end function concatenate_string_string_fn
+
+
+  !> Concatenate a standard Fortran character type and a variable-length string.
+  !>
+  !> @param [in] sChar Standard Fortran fixed-length string
+  !> @param [in] stString variable-length string object
+  !> @retval stConcatString stString variable-length string object
+  function concatenate_char_string_fn( sChar, stString1 )    result(stConcatString)
+
+    character (len=*), intent(in)      :: sChar
+    type (T_STRING), intent(in)        :: stString1
+    type (T_STRING)                    :: stConcatString
+  
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iLen1, iLen2
+    integer (kind=c_int) :: iIndex
+
+    iLen1 = len(sChar)
+    iLen2 = len(stString1)
+
+    allocate ( stConcatString%sChars( iLen1 + iLen2 ) )
+
+    do iIndex = 1, iLen1
+      stConcatString%sChars(iIndex:iIndex) = sChar(iIndex:iIndex)
+    enddo  
+
+    do iIndex = 1, iLen2
+      stConcatString%sChars(iIndex+iLen1:iIndex+iLen1) = stString1%sChars(iIndex:iIndex)
+    enddo  
+
+  end function concatenate_char_string_fn
 
 
   !> Concatenate a variable-length string and a standard Fortran character type.
@@ -272,6 +347,63 @@ contains
   
 
 
+  function remove_chars_from_string_fn(this, sChar)   result(stString)
+
+    class (T_STRING), intent(in)   :: this
+    character (len=*), intent(in)  :: sChar
+    type (T_STRING)                :: stString
+  
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex, iIndex2
+    integer (kind=c_int) :: iLenStr, iLenChar
+    integer (kind=c_int) :: iCount
+    integer (kind=c_int) :: iStat
+    integer (kind=c_int) :: iResult
+    character (len=:), allocatable   :: sTempBuf
+
+    iLenStr = len(this)
+    iLenChar = len(sChar)
+
+    if ( iLenChar > 0) then
+      
+      iCount = 0
+
+      sTempBuf = this%asCharacter()
+
+      do iIndex=1, iLenStr
+
+        iResult = scan(string=sTempBuf(iIndex:iIndex), set=sChar)          
+
+        if ( iResult == 0 ) iCount = iCount + 1
+         
+      enddo
+
+      allocate( stString%sChars(iCount), stat=iStat)
+
+      iIndex2 = 0
+
+      do iIndex=1, iLenStr
+
+        iResult = scan(string=sTempBuf(iIndex:iIndex), set=sChar)          
+
+        if ( iResult == 0 ) then
+
+          iIndex2 = iIndex2 + 1
+          stString%sChars(iIndex2:iIndex2) = sTempBuf(iIndex:iIndex)
+
+        endif  
+         
+      enddo
+
+    endif  
+
+    if (iLenStr == 0 .or. iCount == 0) stString = "NA"
+
+  end function remove_chars_from_string_fn
+
+
+
+
   subroutine string_to_string_sub(stStringOut, stStringIn)
 
     type (T_STRING), intent(inout)  :: stStringOut
@@ -374,14 +506,14 @@ contains
   end function return_length_fn
 
 
-  function string_length_fn(stString)     result(iValue)
+  pure function string_length_fn(stString)     result(iValue)
 
   	type (T_STRING), intent(in) :: stString
     integer (kind=c_int) :: iValue
 
     if (allocated(stString%sChars)) then
 
-      iValue = size(stString%sChars,1)
+      iValue = ubound(stString%sChars,1)
 
     else
 
@@ -700,6 +832,7 @@ contains
     if (len(this) > 0) then
       do iIndex = 1, len(this)
         iASCII_charnum = iachar(this%sChars(iIndex))
+
         if (     iASCII_charnum >= 97 &
           .and.  iASCII_charnum <= 122) then
           sChar(iIndex:iIndex) = achar(iASCII_charnum - 32)

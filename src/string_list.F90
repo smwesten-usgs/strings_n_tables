@@ -68,9 +68,9 @@ contains
     integer (kind=c_int) :: iIndex
     integer (kind=c_int) :: iStat
 
-    if (this%iCount > 0) then
+    if (ubound(this%sl,1) > 0) then
 
-      do iIndex = 1, this%iCount
+      do iIndex = 1, ubound(this%sl,1)
 
         call this%sl(iIndex)%deallocate()
         
@@ -118,14 +118,21 @@ function return_string_at_index_fn(this, iIndex)  result(stString)
 
 end function return_string_at_index_fn  
 
-  subroutine initialize_list_sub(this)
+  subroutine initialize_list_sub(this, iInitialSize)
 
     class (T_STRING_LIST), intent(inout) :: this
+    integer (kind=c_int), intent(in), optional :: iInitialSize
 
     ! [ LOCALS ]
     integer (kind=c_int) :: iStat
 
-    if ( allocated(this%sl) ) then  
+    if (present(iInitialSize)) then
+
+      call this%deallocate()
+      allocate(this%sl(iInitialSize))
+      this%iCount = 0
+
+    elseif ( allocated(this%sl) ) then  
 
       this%iCount = 0
 
@@ -236,7 +243,7 @@ end function return_string_at_index_fn
 
     if (allocated(this%sl)) then
 
-      iSize = size(this%sl,1)
+      iSize = ubound(this%sl,1)
 
       !> We have reached the current maximum number of allocated
       !> string entities in this list

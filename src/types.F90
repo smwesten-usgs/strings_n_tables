@@ -31,6 +31,8 @@ module types
   integer (kind=c_int), parameter :: DOUBLE_DATA = 3
   integer (kind=c_int), parameter :: T_STRING_DATA = 4
   integer (kind=c_int), parameter :: T_DATETIME_DATA = 5
+  integer (kind=c_int), parameter :: T_DATE_DATA = 6
+  integer (kind=c_int), parameter :: T_TIME_DATA = 7
 
   logical (kind=c_bool), parameter :: lFALSE = .false.
   logical (kind=c_bool), parameter :: lTRUE = .true.

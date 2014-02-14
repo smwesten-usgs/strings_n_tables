@@ -26,11 +26,11 @@ module data_file
 
   contains
 
-    procedure, private :: open_file_char_sub
-    generic, public :: open => open_file_char_sub
+    !procedure, private :: open_file_char_sub
+    procedure, public :: open => open_file_char_sub
 
-    procedure, private :: close_file_sub
-    generic, public :: close => close_file_sub
+    !procedure, private :: close_file_sub
+    procedure, public :: close => close_file_sub
 
     procedure, private :: is_file_open_fn
     generic, public :: isOpen => is_file_open_fn
@@ -60,8 +60,8 @@ module data_file
     procedure, private :: read_header_fn
     generic, public    :: readHeader => read_header_fn
 
-    procedure, private :: read_line_of_data_sub 
-    generic, public    :: readLine => read_line_of_data_sub
+    procedure, private :: read_line_of_data_fn
+    generic, public    :: readLine => read_line_of_data_fn
 
 ! procedure :: putRow => put_row_of_data_sub
 ! procedure :: getNext => get_next_data_item_fn
@@ -274,7 +274,7 @@ contains
 
 
 
-  function read_line_of_data_sub(this) result(stString)
+  function read_line_of_data_fn(this) result(stString)
 
     class (T_DATA_FILE), intent(inout) :: this
     type (T_STRING) :: stString
@@ -295,7 +295,7 @@ contains
 
     endif
 
-  end function read_line_of_data_sub
+  end function read_line_of_data_fn
 
   
 

@@ -16,7 +16,7 @@ module unittest
 
 contains
 
-  subroutine expect_equal_float_sub(fValue1, fValue2)   result
+  !subroutine expect_equal_float_sub(fValue1, fValue2)   result
 
 
 

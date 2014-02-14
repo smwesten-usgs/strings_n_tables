@@ -15,10 +15,9 @@ public :: T_DATA_FRAME
 
 type T_DATA_FRAME
 
-  integer (kind=c_int), dimension(:), allocatable :: iDataTypes
-  type (T_STRING_LIST) :: stColNames
-  class (T_DATA_COLUMN), dimension(:), allocatable :: col
-  integer (kind=c_int) :: iCount
+  integer (kind=c_int), allocatable        :: iDataTypes(:)
+  type (T_STRING_LIST)                     :: stColNames
+  class (T_DATA_COLUMN_PTR), allocatable   :: Columns(:)
 
 contains
 
@@ -57,30 +56,43 @@ contains
     this%stColNames = stColNames
     this%iDataTypes = iDataTypes
 
-    allocate( this%col(this%stColNames%count() ) )
+    !> allocate space for the required number of class T_DATA_COLUMN_PTR 
+    allocate( this%Columns(this%stColNames%count() ) )
 
-    this%iCount = this%stColNames%count()
+    print *, "Number of columns: ", ubound(this%Columns,1)
 
-    print *, "Number of columns: ", this%iCount
+    do iIndex = 1, ubound(this%Columns,1)
 
-    do iIndex = 1, this%iCount
+      select case ( this%iDataTypes(iIndex) )
 
-      associate ( current_column => this%col(iIndex) )
+        case (INTEGER_DATA)
 
-        select case ( this%iDataTypes(iIndex) )
+          !> reallocate to class T_DATA_COLUMN_INTEGER
+          allocate( T_DATA_COLUMN_INTEGER :: this%Columns(iIndex)%pColumn )
 
-          case (INTEGER_DATA)
+        case (FLOAT_DATA)
 
-            allocate(T_DATA_COLUMN_INTEGER:this%col(iIndex))
-            call current_column%new( iCount = iRecordCount )
-      !> create a new column space for each item detected in the header
-!      call this%col(iIndex)%new(iDataType = this%iDataTypes(iIndex), &
-!                                iCount = iRecordCount)
-          case default
+          allocate( T_DATA_COLUMN_FLOAT :: this%Columns(iIndex)%pColumn )
 
-        end select
-        
-      end associate 
+        case (DOUBLE_DATA)
+
+          allocate( T_DATA_COLUMN_DOUBLE :: this%Columns(iIndex)%pColumn )
+
+        case (T_STRING_DATA)
+
+          allocate( T_DATA_COLUMN_STRING :: this%Columns(iIndex)%pColumn )
+
+        case (T_DATETIME_DATA)
+
+          allocate( T_DATA_COLUMN_DATETIME :: this%Columns(iIndex)%pColumn )
+
+        case default
+
+          stop (" unhandled case in file data_column, line ~ 94")
+
+      end select 
+
+      call this%Columns(iIndex)%pColumn%new( iCount = iRecordCount )
           
       stString = this%stColNames%value(iIndex)
 
@@ -94,7 +106,7 @@ contains
 
 
 
-  subroutine populate_data_frame_by_row_sub( this, stString , sDelimiters)
+  subroutine populate_data_frame_by_row_sub( this, stString, sDelimiters)
 
     class (T_DATA_FRAME), intent(inout) :: this
     type (T_STRING), intent(inout) :: stString
@@ -104,7 +116,7 @@ contains
     integer (kind=c_int) :: iIndex
     integer (kind=c_int) :: iColNum, iRowNum
     type (T_STRING) :: stSubString
-    type (T_DATA_COLUMN) :: tCol
+    integer (kind=c_int) :: iRecnum
 
     iIndex = 0
 
@@ -114,37 +126,35 @@ contains
 
       iIndex = iIndex + 1
 
-      iRowNum = this%col(iIndex)%incrementRecnum()
+      !iRowNum = this%Columns(iIndex)%pColumn%incrementRecnum()
 
-      associate ( tCol => this%col(iIndex) )
-      
-        select type ( tCol )
+      if (iIndex > ubound(this%Columns,1))  stop ("Too many columns read in.")
+
+      select type ( col => this%Columns(iIndex)%pColumn )
  
-          type is (T_DATA_COLUMN_INTEGER)
+        type is (T_DATA_COLUMN_INTEGER)
 
-            call tCol%putval( stSubString%asInt() )
+        iRecnum = col%putval( stSubString%asInt() )
 
-          type is (T_DATA_COLUMN_FLOAT)
+        type is (T_DATA_COLUMN_FLOAT)
 
-            call tCol%putval( stSubString%asFloat() )
+          iRecnum = col%putval( stSubString%asFloat() )
 
-          type is (T_DATA_COLUMN_DOUBLE)
+        type is (T_DATA_COLUMN_DOUBLE)
 
-            call tCol%putval( stSubString%asDouble() )
+          iRecnum = col%putval( stSubString%asDouble() )
 
-          type is (T_DATA_COLUMN_DATETIME)
+        type is (T_DATA_COLUMN_STRING)
 
-            call tCol%putval( stSubString )
+          iRecnum = col%putval( stSubString )
 
-          type is (T_DATA_COLUMN_STRING)  
+        type is (T_DATA_COLUMN_DATETIME)  
 
-            call tCol%putval( stSubstring )
+          iRecnum = col%putval( stSubstring )
 
-          class default 
+        class default 
 
-        end select
-
-      end associate
+      end select
 
     enddo
 
@@ -168,7 +178,7 @@ contains
     character (len=64) :: sChar
     type (T_STRING) :: stString
 
-    do iIndex = 1, this%iCount
+    do iIndex = 1, ubound(this%Columns,1)
 
       stString = this%stColNames%value(iIndex)
 
@@ -177,13 +187,13 @@ contains
       write(*, "(/,a)") "Variable name: "//trim(sChar)
 
 
-      write (*, fmt="(5x, a, i8)") "Count: ", int( this%col(iIndex)%count() )
-      write (*, fmt="(7x, a, g15.5)") "Min: ", this%col(iIndex)%min()
-      write (*, fmt="(7x, a, g15.5)") "Max: ", this%col(iIndex)%max()
-      write (*, fmt="(7x, a, g15.5)") "Sum: ", this%col(iIndex)%sum()
-      write (*, fmt="(7x, a, g15.5)") "Mean: ", this%col(iIndex)%mean()
+      write (*, fmt="(5x, a, i8)") "Count: ", int( this%Columns(iIndex)%pColumn%count() )
+      write (*, fmt="(7x, a, g15.5)") "Min: ", this%Columns(iIndex)%pColumn%min()
+      write (*, fmt="(7x, a, g15.5)") "Max: ", this%Columns(iIndex)%pColumn%max()
+      write (*, fmt="(7x, a, g15.5)") "Sum: ", this%Columns(iIndex)%pColumn%sum()
+      write (*, fmt="(7x, a, g15.5)") "Mean: ", this%Columns(iIndex)%pColumn%mean()
 
-     enddo 
+    enddo 
 
 
   end subroutine summarize_data_frame_sub

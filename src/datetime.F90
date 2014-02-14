@@ -8,6 +8,7 @@ module datetime
 
   use iso_c_binding, only : c_short, c_int, c_float, c_double
   use types
+  use exceptions
   use strings
 
   implicit none

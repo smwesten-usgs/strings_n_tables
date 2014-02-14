@@ -21,8 +21,6 @@ type, public :: T_DATA_COLUMN
 contains
 
   private
-!  procedure, private :: create_new_column_sub
-  procedure, public    :: new => create_new_column_sub
 
 !   procedure, private :: put_next_integer_value_fn
 !   procedure, private :: put_next_float_value_fn
@@ -35,31 +33,47 @@ contains
 !                                   put_next_datetime_value_fn, &
 !                                   put_next_string_value_fn
 
-!  procedure, private :: sum_of_column_elements_fn
-  procedure, public    :: sum => sum_of_column_elements_fn
+  !> DOXYGEN_IMPL data_column::create_new_column_sub
+  procedure, private :: create_new_column_sub
+  generic, public   :: new => create_new_column_sub
 
-!  procedure, private :: return_current_record_number_fn
-  procedure, public    :: currentRecnum => return_current_record_number_fn
+  !> DOXYGEN_IMPL data_column::sum_of_column_elements_fn
+  procedure, private :: sum_of_column_elements_fn
+  generic, public    :: sum => sum_of_column_elements_fn
 
-!  procedure, private :: increment_current_record_number_fn
-  procedure, public    :: incrementRecnum => increment_current_record_number_fn
+  !> DOXYGEN_IMPL data_column::return_current_record_number_fn
+  procedure, private :: return_current_record_number_fn
+  generic, public    :: currentRecnum => return_current_record_number_fn
 
-!  procedure, private :: return_data_type_fn
-  procedure, public    :: datatype => return_data_type_fn
+  !> DOXYGEN_IMPL data_column::increment_current_record_number_fn
+  procedure, private :: increment_current_record_number_fn
+  generic, public    :: incrementRecnum => increment_current_record_number_fn
 
-!  procedure, private :: min_of_column_elements_fn
-  procedure, public    :: min => min_of_column_elements_fn
+  !> DOXYGEN_IMPL data_column::return_data_type_fn
+  procedure, private :: return_data_type_fn
+  generic, public    :: datatype => return_data_type_fn
 
-!  procedure, private :: max_of_column_elements_fn
-  procedure, public    :: max => max_of_column_elements_fn
+  procedure, private :: min_of_column_elements_fn
+  generic, public    :: min => min_of_column_elements_fn
 
-!  procedure, private :: count_of_column_elements_fn
-  procedure, public    :: count => count_of_column_elements_fn
+  procedure, private :: max_of_column_elements_fn
+  generic, public    :: max => max_of_column_elements_fn
 
-!  procedure, private :: mean_of_column_elements_fn
-  procedure, public    :: mean => mean_of_column_elements_fn
+  procedure, private :: count_of_column_elements_fn
+  generic, public    :: count => count_of_column_elements_fn
+
+  procedure, private :: mean_of_column_elements_fn
+  generic, public    :: mean => mean_of_column_elements_fn
 
 end type T_DATA_COLUMN
+
+!------
+
+type, public :: T_DATA_COLUMN_PTR
+  
+  class (T_DATA_COLUMN), pointer :: pColumn
+
+end type T_DATA_COLUMN_PTR
 
 !------
 
@@ -111,6 +125,29 @@ end type T_DATA_COLUMN_DATETIME
 
 !------
 
+type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_DATE
+
+  type (T_DATETIME), dimension(:), pointer, private         :: pDate
+
+contains
+
+  procedure, public :: putval => put_next_date_value_fn
+
+end type T_DATA_COLUMN_DATE
+
+!------
+
+type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_TIME
+
+  type (T_DATETIME), dimension(:), pointer, private         :: pTime
+
+contains
+
+  procedure, public :: putval => put_next_time_value_fn
+
+end type T_DATA_COLUMN_TIME
+
+!------
 type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_STRING
 
   type (T_STRING_LIST), private                             :: stData
@@ -123,8 +160,6 @@ end type T_DATA_COLUMN_STRING
 
 !------
 
-
-
 contains
 
   function put_next_integer_value_fn(this, iValue)   result(iRecNum)
@@ -133,9 +168,9 @@ contains
     integer (kind=c_int), intent(in)    :: iValue
     integer (kind=c_int)                :: iRecNum
 
-    iRecNum = this%currentRecnum()
-    this%iData(iRecNum) = iValue
+    !iRecNum = this%currentRecnum()
     iRecNum = this%incrementRecnum()
+    this%iData(iRecNum) = iValue
 
   end function put_next_integer_value_fn
 
@@ -147,9 +182,10 @@ contains
     real (kind=c_float), intent(in)     :: fValue
     integer (kind=c_int)                :: iRecNum
 
-    iRecNum = this%currentRecnum()
-    this%fData(iRecNum) = fValue
+    !iRecNum = this%currentRecnum()
     iRecNum = this%incrementRecnum()
+    this%fData(iRecNum) = fValue
+    !iRecNum = this%incrementRecnum()
 
   end function put_next_float_value_fn
 
@@ -161,9 +197,9 @@ contains
     real (kind=c_double), intent(in)    :: dValue
     integer (kind=c_int)                :: iRecNum
 
-    iRecNum = this%currentRecnum()
-    this%dData(iRecNum) = dValue
+    !iRecNum = this%currentRecnum()
     iRecNum = this%incrementRecnum()
+    this%dData(iRecNum) = dValue
 
   end function put_next_double_value_fn
 
@@ -178,12 +214,48 @@ contains
     ! [ LOCALS ]
     type (T_DATETIME), pointer :: pDT
 
-    iRecNum = this%currentRecnum()
+!    iRecNum = this%currentRecnum()
+    iRecNum = this%incrementRecnum()
     pDT => this%pDatetime(iRecNum)
     call pDT%parseDate( stDatetime ) 
     iRecNum = this%incrementRecnum()
 
   end function put_next_datetime_value_fn
+
+!--------------------------------------------------------------------
+
+  function put_next_date_value_fn(this, stDate)   result(iRecNum)
+
+    class (T_DATA_COLUMN_DATE), intent(inout)   :: this
+    type (T_STRING), intent(in)            :: stDate
+    integer (kind=c_int)                   :: iRecNum
+
+    ! [ LOCALS ]
+    type (T_DATE), pointer :: pDate
+
+ !   iRecNum = this%currentRecnum()
+    iRecNum = this%incrementRecnum()
+    pDate => this%pDate(iRecNum)
+    call pDate%parseDate( stDate ) 
+
+  end function put_next_date_value_fn
+
+!--------------------------------------------------------------------
+
+  function put_next_time_value_fn(this, stTime)   result(iRecNum)
+
+    class (T_DATA_COLUMN_TIME), intent(inout)   :: this
+    type (T_STRING), intent(in)                 :: stTime
+    integer (kind=c_int)                        :: iRecNum
+
+    ! [ LOCALS ]
+    type (T_), pointer :: pTime
+
+    iRecNum = this%incrementRecnum()
+    pTime => this%pTime(iRecNum)
+    call pTime%parseTime( stTime ) 
+
+  end function put_next_time_value_fn
 
 !--------------------------------------------------------------------
 
@@ -260,6 +332,14 @@ contains
       type is (T_DATA_COLUMN_STRING)  
 
         iDataType = T_STRING_DATA
+
+      type is (T_DATA_COLUMN_DATE)
+      
+        iDataType = T_DATE_DATA
+
+      type is (T_DATA_COLUMN_TIME)  
+
+        iDataType = T_TIME_DATA
 
       class default
     
@@ -406,20 +486,18 @@ contains
   subroutine create_new_column_sub(this, iCount)
 
     class (T_DATA_COLUMN) :: this
-    integer (kind=c_int),intent(in) :: iCount
+    integer (kind=c_int),intent(in)  :: iCount
 
     ! [ LOCALS ]
     integer (kind=c_int) :: iStat
 
     !> lMask entries will be used later on to assist in 
     !> subsetting of particular chunks of data
-    allocate( this%lMask(iCount), stat = iStat)
-    this%lMask = lTRUE
-
+    
     select type (this)
 
       type is (T_DATA_COLUMN_INTEGER)
-
+        
         allocate( this%iData(iCount), stat = iStat )
 
       type is (T_DATA_COLUMN_FLOAT)
@@ -438,12 +516,24 @@ contains
 
         allocate( this%pDatetime(iCount), stat=iStat)
 
+      type is (T_DATA_COLUMN_DATE)
+
+        allocate( this%pDate(iCount), stat=iStat)
+
+      type is (T_DATA_COLUMN_TIME)
+
+        allocate( this%pTime(iCount), stat=iStat)
+
       class default
 
         call assert(lFALSE, "Internal programming error", &
             __FILE__, __LINE__)
 
     end select
+
+    allocate( this%lMask(iCount), stat = iStat)
+    this%lMask = lTRUE
+
 
   call assert( iStat == 0, "Failed to allocate memory while creating a new column", &
         __FILE__, __LINE__)

@@ -4,6 +4,7 @@
 module strings
 
   use iso_c_binding, only : c_int, c_float, c_double, c_bool
+  use exceptions
   use types
   implicit none
 
@@ -123,11 +124,6 @@ module strings
     procedure :: dquote_char_fn
     procedure :: dquote_string_fn
   end interface dquote
-
-  interface assert
-     procedure :: assert_4bit
-     procedure :: assert_1bit
-  end interface assert
 
 contains
 
@@ -899,51 +895,5 @@ contains
   end function convert_to_lowercase_fn
 
 
-  subroutine assert_1bit(lCondition, sMessage, sModule, iLine)
-
-    logical (kind=c_bool), intent(in)           :: lCondition
-    character (len=*), intent(in)               :: sMessage
-    character (len=*), intent(in), optional     :: sModule
-    integer (kind=c_int), intent(in), optional  :: iLine 
-
-    if (.not. lCondition) then
-
-      write (*, fmt="(a)") "Error condition: "//trim(sMessage)
-
-      if (present(sModule))  &
-        write (*, fmt="(a)")     "   module: "//trim(sModule)
-
-      if (present(iLine))  &
-        write (*, fmt="(a,i7)")  "  line no: ", iLine
-
-      stop
-
-    endif      
-
-  end subroutine assert_1bit
-
-
-  subroutine assert_4bit(lCondition, sMessage, sModule, iLine)
-
-    logical (kind=4), intent(in)                :: lCondition
-    character (len=*), intent(in)               :: sMessage
-    character (len=*), intent(in), optional     :: sModule
-    integer (kind=c_int), intent(in), optional  :: iLine 
-
-    if (.not. lCondition) then
-
-      write (*, fmt="(a)") "Error condition: "//trim(sMessage)
-
-      if (present(sModule))  &
-        write (*, fmt="(a)")     "   module: "//trim(sModule)
-
-      if (present(iLine))  &
-        write (*, fmt="(a,i7)")  "  line no: ", iLine
-
-      stop
-
-    endif      
-
-  end subroutine assert_4bit
 
 end module strings

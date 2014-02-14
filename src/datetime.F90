@@ -7,6 +7,7 @@
 module datetime
 
   use iso_c_binding, only : c_short, c_int, c_float, c_double
+  use iso_fortran_env, only : OUTPUT_UNIT
   use types
   use exceptions
   use strings
@@ -17,10 +18,10 @@ module datetime
 
 
   type, public :: T_DATETIME
-
-    integer (kind=c_int) :: iMonth = 1
-    integer (kind=c_int) :: iDay = 1
-    integer (kind=c_int) :: iYear = 1
+    
+    integer (kind=c_int), public :: iMonth = 1
+    integer (kind=c_int), public :: iDay = 1
+    integer (kind=c_int), public :: iYear = 1
     integer (kind=c_int) :: iHour = 0
     integer (kind=c_int) :: iMinute = 0
     integer (kind=c_int) :: iSecond = 0
@@ -40,7 +41,7 @@ module datetime
 !                                           populate_julian_day_sub
 
     procedure, private :: return_days_in_month_fn
-    generic, public    :: dayspermonth => return_days_in_month_fn
+    generic, public    :: daysPerMonth => return_days_in_month_fn
 
     procedure, private :: return_days_in_year_fn
     generic, public    :: daysperyear => return_days_in_year_fn
@@ -57,7 +58,9 @@ module datetime
                                        parse_string_to_date_sub
 
     procedure, private :: parse_text_to_time_sub
-    generic, public    :: parseTime => parse_text_to_time_sub
+    procedure, private :: parse_string_to_time_sub
+    generic, public    :: parseTime => parse_text_to_time_sub, &
+                                       parse_string_to_time_sub
 
     procedure, private :: is_leap_year
     generic, public    :: isLeapYear => is_leap_year
@@ -97,6 +100,9 @@ module datetime
 
     procedure, private :: write_pretty_date_fn
     generic, public    :: prettydate => write_pretty_date_fn
+
+    procedure, private :: print_pretty_date_sub
+    generic, public    :: printdate => print_pretty_date_sub
 
     procedure, private :: write_list_datetime_fn
     generic, public    :: listdatetime => write_list_datetime_fn
@@ -247,14 +253,25 @@ end subroutine set_time_format_indices
 
 !------------------------------------------------------------------------------
 
-subroutine parse_string_to_date_sub(this, stDatetime)
+subroutine parse_string_to_date_sub(this, stDate)
 
   class (T_DATETIME), intent(inout) :: this
-  type (T_STRING), intent(in)       :: stDatetime 
+  type (T_STRING), intent(in)       :: stDate 
 
-
+  call this%parseDate( stDate%asCharacter() )
 
 end subroutine parse_string_to_date_sub
+
+!------------------------------------------------------------------------------  
+
+subroutine parse_string_to_time_sub(this, stTime)
+
+  class (T_DATETIME), intent(inout) :: this
+  type (T_STRING), intent(in)       :: stTime 
+
+  call this%parseTime( stTime%asCharacter() )
+
+end subroutine parse_string_to_time_sub
 
 !------------------------------------------------------------------------------  
 
@@ -278,7 +295,7 @@ subroutine parse_text_to_date_sub(this, sString)
   sStr = trim(adjustl(sString))
 
   sMonth = sStr(iScanMM1 : iScanMM2 )
-  !!!!!!sBuf = clean(sMonth)
+  sBuf = clean(sMonth)
   if(len_trim(sBuf) /= len_trim(sMonth)) then   ! we have a case where there is no leading zero
     iMonthOffset = 1
     sMonth = trim(sBuf)
@@ -289,7 +306,7 @@ subroutine parse_text_to_date_sub(this, sString)
     " date text: "//trim(sStr), TRIM(__FILE__),__LINE__)
 
   sDay = sStr( iScanDD1 - iMonthOffset : iScanDD2 -iMonthOffset )
-  !!!!!sBuf = clean(sDay)
+  sBuf = clean(sDay)
   if(len_trim(sBuf) /= len_trim(sDay)) then   ! we have a case where there is no leading zero
     iDayOffset = 1
     sDay = trim(sBuf)
@@ -340,7 +357,7 @@ subroutine parse_text_to_time_sub(this, sString)
 
   sHour =   sStr( iScanHour1 : iScanHour2 )
 
-  !!!!! sBuf = clean(sHour)
+  sBuf = clean(sHour)
   if(len_trim(sBuf) /= len_trim(sHour)) then   ! we have a case where there is no leading zero
     iOffset = 1
     sHour = trim(sBuf)
@@ -755,6 +772,18 @@ end function date_minus_date_fn
 
 !------------------------------------------------------------------------------
 
+subroutine print_pretty_date_sub(this)
+
+  class(T_DATETIME) :: this
+
+  ! [ LOCALS ]
+  character (len=10) :: sDateText
+
+  sDateText = this%prettydate()
+
+  write(unit=OUTPUT_UNIT, fmt="(a)") sDateText
+
+end subroutine print_pretty_date_sub
 
 !------------------------------------------------------------------------------
 

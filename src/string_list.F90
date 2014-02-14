@@ -33,6 +33,9 @@ module string_list
     procedure, private :: return_position_of_matching_text_fn
     generic, public    :: which => return_position_of_matching_text_fn
 
+    procedure, private :: return_count_of_matching_lines_fn
+    generic, public    :: countMatches => return_count_of_matching_lines_fn
+
     procedure, private :: deallocate_all_list_items_sub
     generic, public    :: deallocate => deallocate_all_list_items_sub
 
@@ -68,13 +71,16 @@ contains
     integer (kind=c_int) :: iIndex
     integer (kind=c_int) :: iStat
 
-    if (ubound(this%sl,1) > 0) then
+    if ( allocated(this%sl) ) then
+      if (ubound(this%sl,1) > 0) then
 
-      do iIndex = 1, ubound(this%sl,1)
+        do iIndex = 1, ubound(this%sl,1)
 
-        call this%sl(iIndex)%deallocate()
+          call this%sl(iIndex)%deallocate()
         
-      enddo
+        enddo
+
+      endif
 
     endif   
 
@@ -129,7 +135,7 @@ end function return_string_at_index_fn
     if (present(iInitialSize)) then
 
       call this%deallocate()
-      allocate(this%sl(iInitialSize))
+      allocate(this%sl(iInitialSize), stat=iStat)
       this%iCount = 0
 
     elseif ( allocated(this%sl) ) then  
@@ -140,10 +146,11 @@ end function return_string_at_index_fn
 
       allocate(this%sl(20), stat = iStat)
 
-      call assert(iStat == 0, &
-          "Failed to allocate memory for list of string objects.")
-
     endif
+
+    call assert(iStat == 0, &
+      "Failed to allocate memory for list of string objects.", __FILE__, __LINE__)
+
 
   end subroutine initialize_list_sub
 
@@ -168,6 +175,31 @@ end function return_string_at_index_fn
     enddo  
 
   end function return_matching_lines_fn
+  
+
+
+  function return_count_of_matching_lines_fn(this, sChar)     result(iCount)
+
+    class (T_STRING_LIST), intent(in) :: this
+    character (len=*), intent(in)     :: sChar
+    integer (kind=c_int)              :: iCount
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int) :: iResult
+
+    iCount = 0
+
+    do iIndex=1, this%iCount
+
+      iResult = index(string = this%sl(iIndex)%asCharacter(), &
+                      substring = sChar)
+
+      if (iResult /= 0)  iCount = iCount + 1
+
+    enddo  
+
+  end function return_count_of_matching_lines_fn
   
 
 

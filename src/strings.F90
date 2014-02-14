@@ -80,7 +80,7 @@ module strings
   end type T_STRING
 
   public :: operator(+), assignment(=), operator(==)
-  public :: len, assert, dquote
+  public :: len, assert, dquote, clean
 
   interface operator(+)
     procedure :: concatenate_string_string_fn
@@ -895,5 +895,38 @@ contains
   end function convert_to_lowercase_fn
 
 
+
+  function clean(sRecord,sDelimiters)                       result(sItem)
+
+    ! ARGUMENTS
+    character (len=*), intent(inout)           :: sRecord
+    character (len=*), intent(in), optional    :: sDelimiters
+
+    ! LOCALS
+    character (len=256) :: sItem
+    integer (kind=c_int) :: iR                 ! Index in sRecord
+    integer (kind=c_int) :: i, j
+
+    ! eliminate any leading spaces
+    sRecord = adjustl(sRecord)
+    sItem = ""
+    j = 0
+
+    do i = 1,len_trim(sRecord)
+
+      if(present(sDelimiters)) then
+        iR = SCAN(sRecord(i:i),sDelimiters)
+      else
+        iR = SCAN(sRecord(i:i),":/;,")
+      endif
+
+      if(iR==0) then
+        j = j + 1
+        sItem(j:j) = sRecord(i:i)
+      end if
+
+    enddo
+
+  end function clean
 
 end module strings

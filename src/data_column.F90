@@ -53,17 +53,23 @@ contains
   procedure, private :: return_data_type_fn
   generic, public    :: datatype => return_data_type_fn
 
+  !> DOXYGEN_IMPL data_column::min_of_column_elements_fn
   procedure, private :: min_of_column_elements_fn
   generic, public    :: min => min_of_column_elements_fn
-
+  
+  !> DOXYGEN_IMPL data_column::max_of_column_elements_fn
   procedure, private :: max_of_column_elements_fn
   generic, public    :: max => max_of_column_elements_fn
 
+  !> DOXYGEN_IMPL data_column::count_of_column_elements_fn
   procedure, private :: count_of_column_elements_fn
   generic, public    :: count => count_of_column_elements_fn
-
+  
+  !> DOXYGEN_IMPL data_column::mean_of_column_elements_fn
   procedure, private :: mean_of_column_elements_fn
   generic, public    :: mean => mean_of_column_elements_fn
+
+  procedure, public :: getval => get_date_value_at_index_fn
 
 end type T_DATA_COLUMN
 
@@ -162,6 +168,37 @@ end type T_DATA_COLUMN_STRING
 
 contains
 
+  function get_date_value_at_index_fn(this, iIndex)   result(pDate)
+
+    class (T_DATA_COLUMN), intent(in) :: this
+    integer (kind=c_int), intent(in)       :: iIndex
+    class (T_DATETIME), pointer            :: pDate
+
+    select type (this)
+
+      type is (T_DATA_COLUMN_DATE)
+
+        if (associated(this%pDate)) then
+
+          if (iIndex >= lbound(this%pDate,1) &
+              .and. iIndex <= ubound(this%pDate,1)) then
+
+            pDate => this%pDate(iIndex)
+
+          endif
+      
+        endif    
+
+      class default  
+
+        pDate => null()
+
+      end select  
+
+  end function get_date_value_at_index_fn
+  
+!--------------------------------------------------------------------
+
   function put_next_integer_value_fn(this, iValue)   result(iRecNum)
 
     class (T_DATA_COLUMN_INTEGER), intent(inout)   :: this
@@ -208,8 +245,8 @@ contains
   function put_next_datetime_value_fn(this, stDatetime)   result(iRecNum)
 
     class (T_DATA_COLUMN_DATETIME), intent(inout)   :: this
-    type (T_STRING), intent(in)            :: stDatetime
-    integer (kind=c_int)                   :: iRecNum
+    type (T_STRING), intent(in)                     :: stDatetime
+    integer (kind=c_int)                            :: iRecNum
 
     ! [ LOCALS ]
     type (T_DATETIME), pointer :: pDT
@@ -227,11 +264,11 @@ contains
   function put_next_date_value_fn(this, stDate)   result(iRecNum)
 
     class (T_DATA_COLUMN_DATE), intent(inout)   :: this
-    type (T_STRING), intent(in)            :: stDate
-    integer (kind=c_int)                   :: iRecNum
+    type (T_STRING), intent(in)                 :: stDate
+    integer (kind=c_int)                        :: iRecNum
 
     ! [ LOCALS ]
-    type (T_DATE), pointer :: pDate
+    type (T_DATETIME), pointer :: pDate
 
  !   iRecNum = this%currentRecnum()
     iRecNum = this%incrementRecnum()
@@ -249,7 +286,7 @@ contains
     integer (kind=c_int)                        :: iRecNum
 
     ! [ LOCALS ]
-    type (T_), pointer :: pTime
+    type (T_DATETIME), pointer :: pTime
 
     iRecNum = this%incrementRecnum()
     pTime => this%pTime(iRecNum)
@@ -432,6 +469,10 @@ contains
       
         dMin = minval(this%dData, this%lMask)
 
+      type is (T_DATA_COLUMN_DATE)
+
+        dMin = minval(this%pDate%iJulianDay, this%lMask)
+
       class default
       
         dMin = -9999.
@@ -460,6 +501,10 @@ contains
       type is (T_DATA_COLUMN_DOUBLE)
       
         dMax = maxval(this%dData, this%lMask)
+
+      type is (T_DATA_COLUMN_DATE)
+
+        dMax = maxval(this%pDate%iJulianDay, this%lMask)
 
       class default
       

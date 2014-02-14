@@ -4,7 +4,9 @@ program dftest
   use strings
   use string_list
   use data_frame
+  use data_column
   use data_file
+  use datetime
   use types
 
   implicit none
@@ -15,8 +17,15 @@ program dftest
   type (T_STRING_LIST) :: stl
   type (T_DATA_FRAME) :: df, df2
   type (T_STRING_LIST) :: stHeader	
+  class (T_DATA_COLUMN), pointer :: pColumn
+  class (T_DATETIME), pointer    :: pDate
+
+  integer (kind=c_int) :: iIndex
+  integer (kind=c_int) :: iUpperbound
 
   integer (kind=c_int), dimension(:), allocatable :: iDataType
+
+  integer (kind=c_int), dimension(:), allocatable :: iResult
 
   call tFile%open("rjh_21Nov13_Sample Lake.5.DMCM_fish_concs.csv")
 
@@ -65,7 +74,7 @@ program dftest
   deallocate(iDataType)
   allocate(iDataType(4))
 
-  iDataType = [ T_STRING_DATA, T_DATETIME_DATA, T_STRING_DATA, FLOAT_DATA ]
+  iDataType = [ T_STRING_DATA, T_DATE_DATA, T_TIME_DATA, FLOAT_DATA ]
 
   call df2%initialize(stl, iDataType, tFile%numrecords())
 
@@ -78,5 +87,20 @@ program dftest
   enddo
 
   call df2%summarize()
+
+  iResult = df2%findcol("Date")
+  
+  print *, "Column number that contains Date:", iResult(1)
+
+  pColumn => df2%getcol(2)
+
+  iUpperbound = pColumn%count()
+
+  do iIndex=1, iUpperbound
+
+    pDate => pColumn%getval(iIndex)
+    call pDate%printdate()
+
+  enddo
 
 end program dftest

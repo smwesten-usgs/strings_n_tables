@@ -96,7 +96,7 @@ program dftest
 
   iUpperbound = pColumn%count()
 
-  do iIndex=1, iUpperbound
+  do iIndex=1, iUpperboundf
 
     pDate => pColumn%getval(iIndex)
     call pDate%printdate()

@@ -8,7 +8,7 @@ module string_list
   private
 
   type, public :: T_STRING_LIST
-    type (T_STRING), dimension(:), allocatable, private :: sl 
+    type (T_STRING), dimension(:), allocatable, public :: sl 
     integer (kind=c_int), private :: iCount = 0 
 
   contains
@@ -109,20 +109,21 @@ contains
   end subroutine string_list_to_string_list_sub
 
 
-function return_string_at_index_fn(this, iIndex)  result(stString)
+  function return_string_at_index_fn(this, iIndex)  result(stString)
 
-  class (T_STRING_LIST), intent (in)   :: this
-  integer (kind=c_int)                 :: iIndex
-  type (T_STRING)                      :: stString
+    class (T_STRING_LIST), intent (in)   :: this
+    integer (kind=c_int)                 :: iIndex
+    type (T_STRING)                      :: stString
 
-  if ( ( iIndex >= lbound(this%sl,1) ) &
-      .and. ( iIndex <= ubound(this%sl,1) ) ) then
+    if ( ( iIndex >= lbound(this%sl,1) ) &
+        .and. ( iIndex <= ubound(this%sl,1) ) ) then
 
-    stString = this%sl(iIndex)
+      stString = this%sl(iIndex)
 
-  endif
+    endif
 
-end function return_string_at_index_fn  
+  end function return_string_at_index_fn  
+
 
   subroutine initialize_list_sub(this, iInitialSize)
 
@@ -260,6 +261,7 @@ end function return_string_at_index_fn
     this%sl(this%iCount) = stString
 
   end subroutine append_string_sub  
+  
 
 
   subroutine list_check_allocation_sub(this)

@@ -41,7 +41,7 @@ program dftest
 
     stString = tFile%readLine()
 
-    call df%rowvals(stString, ",")
+    call df%putrow(stString, ",")
 
   enddo
 
@@ -82,25 +82,32 @@ program dftest
 
     stString = tFile%readLine()
 
-    call df2%rowvals( stString, sWHITESPACE )
+    call df2%putrow( stString, sWHITESPACE )
 
   enddo
+
+!  call df2%summarize()
+
+!   iResult = df2%findcol("Date")
+  
+!   print *, "Column number that contains Date:", iResult(1)
+
+!   pColumn => df2%getcol(iResult(1))
+
+!   iUpperbound = pColumn%count()
+
+!   do iIndex=1, iUpperbound
+
+!     pDate => pColumn%getval(iIndex)
+!     call pDate%printdate()
+
+!   enddo
+
 
   call df2%summarize()
 
-  iResult = df2%findcol("Date")
-  
-  print *, "Column number that contains Date:", iResult(1)
-
-  pColumn => df2%getcol(2)
-
-  iUpperbound = pColumn%count()
-
-  do iIndex=1, iUpperboundf
-
-    pDate => pColumn%getval(iIndex)
-    call pDate%printdate()
-
-  enddo
+  pColumn => df2%getcol( "Discharge" )
+  call pColumn%select(300.,GT)
+  call df2%summarize()
 
 end program dftest

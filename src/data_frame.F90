@@ -31,7 +31,7 @@ contains
   generic, public    :: initialize => initialize_data_frame_sub
 
   procedure, private :: populate_data_frame_by_row_sub
-  generic, public    :: rowvals => populate_data_frame_by_row_sub
+  generic, public    :: putrow => populate_data_frame_by_row_sub
 
   procedure, private :: summarize_data_frame_sub
   generic, public    :: summarize => summarize_data_frame_sub
@@ -39,20 +39,21 @@ contains
   procedure, private :: find_column_by_name_fn
   generic, public    :: findcol => find_column_by_name_fn
 
-  procedure, private :: get_column_pointer_fn
-  generic, public    :: getcol => get_column_pointer_fn
-
+  procedure, private :: get_column_pointer_byindex_fn
+  procedure, private :: get_column_pointer_byname_fn
+  generic, public    :: getcol => get_column_pointer_byindex_fn, &
+                                  get_column_pointer_byname_fn
 
 end type T_DATA_FRAME
 
 
 contains
 
-  function get_column_pointer_fn(this, iColNum)    result(pColumn)
+  function get_column_pointer_byindex_fn(this, iColNum)    result(pColumn)
 
-    class (T_DATA_FRAME), intent(in)   :: this
-    integer (kind=c_int)               :: iColNum
-    class (T_DATA_COLUMN), pointer     :: pColumn 
+    class (T_DATA_FRAME), intent(in)         :: this
+    integer (kind=c_int)                     :: iColNum
+    class (T_DATA_COLUMN), pointer           :: pColumn 
 
     pColumn => null()
 
@@ -64,10 +65,41 @@ contains
         pColumn => this%Columns(iColNum)%pColumn
 
       endif
-      
+    
+    else
+
+      call warn("'Columns' member has not been allocated yet.", __FILE__, __LINE__)
+
     endif    
 
-  end function get_column_pointer_fn
+  end function get_column_pointer_byindex_fn
+
+
+
+  function get_column_pointer_byname_fn(this, sColName)    result(pColumn)
+
+    class (T_DATA_FRAME), intent(in)         :: this
+    character (len=*), intent(in)            :: sColName
+    class (T_DATA_COLUMN), pointer           :: pColumn 
+
+    ! [ LOCALS ]
+    integer (kind=c_int), allocatable :: iColNum(:)
+
+    iColNum = this%findcol(sColName)
+
+    if (ubound(iColNum,1) > 0) then
+
+      pColumn => this%getcol(iColNum(1))
+
+    else
+    
+      pColumn => null()
+      call warn("Failed to find a column with name "//trim(sColName), __FILE__,__LINE__)
+
+    endif  
+
+  end function get_column_pointer_byname_fn
+
 
 
   function find_column_by_name_fn(this, sChar)   result(iColNum)

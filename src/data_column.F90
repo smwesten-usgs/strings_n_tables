@@ -5,6 +5,7 @@ use iso_fortran_env, only : IOSTAT_END
 use strings
 use string_list
 use datetime
+use exceptions
 use types
 implicit none
 
@@ -90,6 +91,7 @@ type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_INTEGER
 contains 
 
   procedure, public :: putval => put_next_integer_value_fn
+  procedure, public :: select => set_mask_int_sub
 
 end type T_DATA_COLUMN_INTEGER
 
@@ -102,6 +104,7 @@ type, extends(T_DATA_COLUMN), public :: T_DATA_COLUMN_FLOAT
 contains 
 
   procedure, public :: putval => put_next_float_value_fn
+  procedure, public :: select => set_mask_float_sub
 
 end type T_DATA_COLUMN_FLOAT
 
@@ -166,7 +169,121 @@ end type T_DATA_COLUMN_STRING
 
 !------
 
+  integer (kind=c_int), parameter, public :: GT = 1
+  integer (kind=c_int), parameter, public :: GE = 2
+  integer (kind=c_int), parameter, public :: LT = 3
+  integer (kind=c_int), parameter, public :: LE = 4
+  integer (kind=c_int), parameter, public :: EQ = 5
+  integer (kind=c_int), parameter, public :: OUTSIDE_RANGE = 6
+  integer (kind=c_int), parameter, public :: INSIDE_RANGE = 7
+      
 contains
+
+  subroutine set_mask_int_sub(this, iValue1, iComparison, iValue2)
+
+    class (T_DATA_COLUMN_INTEGER), intent(inout) :: this
+    integer (kind=c_int), intent(in)             :: iValue1
+    integer (kind=c_int), intent(in)             :: iComparison
+    integer (kind=c_int), intent(in), optional   :: iValue2
+
+    this%lMask = lFALSE
+
+    if (iComparison == OUTSIDE_RANGE .or. iComparison == INSIDE_RANGE) &
+      call assert(present(iValue2), "The second value is not optional for this comparison type", &
+        __FILE__, __LINE__)
+
+    select case (iComparison)
+
+      case (GT)
+
+        where (this%iData > iValue1)  this%lMask = lTRUE 
+      
+      case (GE)
+
+        where (this%iData >= iValue1)  this%lMask = lTRUE
+
+      case (LT)
+
+        where (this%iData < iValue1)  this%lMask = lTRUE
+      
+      case (LE)
+
+        where (this%iData <= iValue1)  this%lMask = lTRUE
+
+      case (EQ)
+
+        where (this%iData == iValue1)  this%lMask = lTRUE
+
+      case (OUTSIDE_RANGE)
+
+        where (this%iData > iValue2 .or. this%iData < iValue1)  this%lMask = lTRUE
+
+      case (INSIDE_RANGE)
+
+        where (this%iData <= iValue2 .and. this%iData >= iValue1)  this%lMask = lTRUE
+
+      case default
+
+        call die("Unhandled select case option", __FILE__, __LINE__)
+
+    end select  
+
+  end subroutine set_mask_int_sub
+
+
+
+  subroutine set_mask_float_sub(this, fValue1, iComparison, fValue2)
+
+    class (T_DATA_COLUMN_FLOAT), intent(inout) :: this
+    real (kind=c_float), intent(in)              :: fValue1
+    integer (kind=c_int), intent(in)             :: iComparison
+    real (kind=c_float), intent(in), optional    :: fValue2
+
+    this%lMask = lFALSE
+
+    if (iComparison == OUTSIDE_RANGE .or. iComparison == INSIDE_RANGE) &
+      call assert(present(fValue2), "The second value is not optional for this comparison type", &
+        __FILE__, __LINE__)
+
+    select case (iComparison)
+
+      case (GT)
+
+        where (this%fData > fValue1)  this%lMask = lTRUE 
+      
+      case (GE)
+
+        where (this%fData >= fValue1)  this%lMask = lTRUE
+
+      case (LT)
+
+        where (this%fData < fValue1)  this%lMask = lTRUE
+      
+      case (LE)
+
+        where (this%fData <= fValue1)  this%lMask = lTRUE
+
+      case (EQ)
+
+        where (this%fData == fValue1)  this%lMask = lTRUE
+
+      case (OUTSIDE_RANGE)
+
+        where (this%fData > fValue2 .or. this%fData < fValue1)  this%lMask = lTRUE
+
+      case (INSIDE_RANGE)
+
+        where (this%fData <= fValue2 .and. this%fData >= fValue1)  this%lMask = lTRUE
+
+      case default
+
+        call die("Unhandled select case option", __FILE__, __LINE__)
+
+    end select  
+
+  end subroutine set_mask_float_sub
+
+
 
   function get_date_value_at_index_fn(this, iIndex)   result(pDate)
 

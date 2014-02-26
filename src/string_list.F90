@@ -19,6 +19,10 @@ module string_list
     procedure, private :: append_char_sub
     generic, public    :: append => append_char_sub, append_string_sub
 
+    procedure, private :: make_list_from_char_sub
+!    procedure, private :: make_list_from_string_sub
+    generic, public    :: aslist => make_list_from_char_sub
+
     procedure, private :: return_size_of_vector_fn
     generic, public    :: count => return_size_of_vector_fn
 
@@ -51,6 +55,15 @@ module string_list
   end interface assignment(=)
 
 contains
+
+  subroutine make_list_from_char_sub(this, sCharlist)
+
+    class (T_STRING_LIST), intent(inout)           :: this
+    character (len=64), intent(in), allocatable     :: sCharlist(:)
+
+  end subroutine make_list_from_char_sub
+  
+
 
   function return_size_of_vector_fn(this)   result(iResult)
 

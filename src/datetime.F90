@@ -615,11 +615,11 @@ end subroutine gregorian_date
 !
 ! SOURCE
 
-function julian_day ( iYear, iMonth, iDay, iOrigin ) result(iJD)
+function julian_day ( iYear, iMonth, iDay, iOrigin )  result(iJD)
 
   ! [ ARGUMENTS ]
-  integer (kind=c_int), intent(in) :: iYear, iMonth, iDay
-  integer (kind=c_int), optional :: iOrigin
+  integer (kind=c_int), intent(in)           :: iYear, iMonth, iDay
+  integer (kind=c_int), intent(in), optional :: iOrigin
 
   ! [ LOCALS ]
   integer (kind=c_int) i,j,k
@@ -656,7 +656,7 @@ function julian_day ( iYear, iMonth, iDay, iOrigin ) result(iJD)
 
 !------------------------------------------------------------------------------
 
-function is_date_greater_than(date1, date2)   result(lResult)
+elemental function is_date_greater_than(date1, date2)   result(lResult)
 
   class(T_DATETIME), intent(in) :: date1
   class(T_DATETIME), intent(in) :: date2
@@ -1061,9 +1061,9 @@ end subroutine new_daterange_fm_datetime_sub
 
 !------------------------------------------------------------------------------
 
-function get_julian_day_float_fn(this)                   result(rJulianDay)
+elemental function get_julian_day_float_fn(this)                   result(rJulianDay)
 
-  class(T_DATETIME) :: this
+  class(T_DATETIME), intent(in) :: this
   real (kind=c_double) :: rJulianDay
 
   rJulianDay = real(this%iJulianDay, kind=c_double) + real(this%rFractionOfDay,kind=c_double)

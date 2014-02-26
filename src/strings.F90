@@ -81,6 +81,7 @@ module strings
 
   public :: operator(+), assignment(=), operator(==)
   public :: len, assert, dquote, clean
+  public :: asCharacter
 
   interface operator(+)
     procedure :: concatenate_string_string_fn
@@ -120,6 +121,13 @@ module strings
     procedure :: string_length_fn
   end interface len
 
+  interface asCharacter
+    procedure :: int_to_character_fn
+    procedure :: float_to_character_fn
+    procedure :: double_to_character_fn
+    procedure :: string_to_character_fn
+  end interface asCharacter
+
   interface dquote
     procedure :: dquote_char_fn
     procedure :: dquote_string_fn
@@ -145,6 +153,60 @@ contains
 
   end function dquote_string_fn
     
+
+
+  function int_to_character_fn(iValue)      result(sChar)
+
+    integer (kind=c_int), intent(in)  :: iValue
+    character (len=:), allocatable    :: sChar
+
+    ! [ LOCALS ]
+    character(len=16) :: sBuf
+    
+    write(sBuf, fmt="(i16)") iValue
+    
+    sChar = trim( adjustl(sBuf) )
+
+  end function int_to_character_fn
+
+
+  function float_to_character_fn(fValue)      result(sChar)
+
+    real (kind=c_float), intent(in)  :: fValue
+    character (len=:), allocatable    :: sChar
+
+    ! [ LOCALS ]
+    character(len=16) :: sBuf
+    write(sBuf, fmt="(g0)") fValue
+
+    sChar = trim( adjustl(sBuf) )
+
+  end function float_to_character_fn
+
+
+  function double_to_character_fn(dValue)      result(sChar)
+
+    real (kind=c_double), intent(in)  :: dValue
+    character (len=:), allocatable    :: sChar
+
+    ! [ LOCALS ]
+    character(len=32) :: sBuf
+    write(sBuf, fmt="(g0)") dValue
+
+    sChar = trim( adjustl(sBuf) )
+
+  end function double_to_character_fn
+
+
+  function string_to_character_fn(stString)     result(sChar)
+
+    type (T_STRING), intent(in)    :: stString
+    character (len=:), allocatable :: sChar
+
+    sChar = stString%asCharacter()
+
+  end function string_to_character_fn
+
 
   subroutine deallocate_sub(this)
 

@@ -14,7 +14,7 @@ program dftest
   type (T_DATA_FILE) :: tFile
   type (T_STRING) :: stString
   type (T_STRING) :: st
-  type (T_STRING_LIST) :: stl
+  type (T_STRING_LIST) :: stl, stl2
   type (T_DATA_FRAME) :: df, df2
   type (T_STRING_LIST) :: stHeader	
   class (T_DATA_COLUMN), pointer :: pColumn
@@ -63,7 +63,8 @@ program dftest
   call stl%append(st)
 
   st = "Date"
-  call stl%append(st)
+  !call stl%append(st)
+call stl%append("Date")
 
   st = "Time"
   call stl%append(st)
@@ -73,7 +74,8 @@ program dftest
 
   deallocate(iDataType)
   allocate(iDataType(4))
-
+  
+  ! define the datatypes that will be present in the new data frame
   iDataType = [ T_STRING_DATA, T_DATE_DATA, T_TIME_DATA, FLOAT_DATA ]
 
   call df2%initialize(stl, iDataType, tFile%numrecords())
@@ -108,6 +110,10 @@ program dftest
 
   pColumn => df2%getcol( "Discharge" )
   call pColumn%select(300.,GT)
+  call df2%summarize()
+
+  call df2%select( sColname="Discharge", iComparison=GT, fValue=300. )
+
   call df2%summarize()
 
 end program dftest

@@ -22,14 +22,14 @@ module datetime
     integer (kind=c_int), public :: iMonth = 1
     integer (kind=c_int), public :: iDay = 1
     integer (kind=c_int), public :: iYear = 1
-    integer (kind=c_int) :: iHour = 0
-    integer (kind=c_int) :: iMinute = 0
-    integer (kind=c_int) :: iSecond = 0
-    integer (kind=c_int) :: iWaterYearHigh
-    integer (kind=c_int) :: iWaterYearLow
-    logical (kind=c_bool) :: lIsLeapYear = lFALSE
-    integer (kind=c_int) :: iJulianDay
-    real (kind=c_float) :: fFractionOfDay = fZERO
+    integer (kind=c_int)         :: iHour = 0
+    integer (kind=c_int)         :: iMinute = 0
+    integer (kind=c_int)         :: iSecond = 0
+    integer (kind=c_int)         :: iWaterYearHigh
+    integer (kind=c_int)         :: iWaterYearLow
+    logical (kind=c_bool)        :: lIsLeapYear = lFALSE
+    integer (kind=c_int)         :: iJulianDay
+    real (kind=c_float)          :: fFractionOfDay = fZERO
 
   contains
 
@@ -334,8 +334,6 @@ subroutine parse_text_to_date_sub(this, sString)
   read(sYear,fmt=*, iostat = iStat) iYear
   call Assert(iStat==0, "Error parsing year value from text file - got "//trim(sYear)//";"// &
     " date text: "//trim(sStr), TRIM(__FILE__),__LINE__)
-
-!  if(iYear <= 99 ) iYear = iYear + 1900    ! this might be a lethal assumption
 
   call this%calcJulianDay(iYear=iYear, iMonth=iMonth, iDay=iDay)
 
@@ -643,8 +641,6 @@ subroutine gregorian_date(iJD, iYear, iMonth, iDay, iOrigin)
   iMonth = iJ
   iDay = iK
 
-  return
-
 end subroutine gregorian_date
 
 
@@ -811,13 +807,18 @@ end function is_date_equal_to
 
 !------------------------------------------------------------------------------
 
-function date_minus_date_fn(dtDate1, dtDate2)  result(rDelta)
+!> Subtract one datetime value from another
+!!
+!! @param[in] dtDate1 First datetime value in the calculation
+!! @param[in] dtDate2 Second datetime value; to be subtracted from the first value
+!! @retval dDelta Difference between the two datetime objects
+function date_minus_date_fn(dtDate1, dtDate2)  result(dDelta)
 
   class(T_DATETIME), intent(in) :: dtDate1
   class(T_DATETIME), intent(in) :: dtDate2
-  real (kind=c_double) :: rDelta
+  real (kind=c_double) :: dDelta
 
-  rDelta = dtDate1%getJulianDay() - dtDate2%getJulianDay()
+  dDelta = dtDate1%getJulianDay() - dtDate2%getJulianDay()
 
 end function date_minus_date_fn
 
@@ -827,7 +828,7 @@ function date_minus_int_fn(dtDate1, iValue)  result(dtNewDate)
 
   class(T_DATETIME), intent(in)    :: dtDate1
   integer (kind=c_int), intent(in) :: iValue
-  type (T_DATETIME), allocatable    :: dtNewDate
+  type (T_DATETIME)                :: dtNewDate
 
   ! [ LOCALS ]
   real (kind=c_double) :: dJD
@@ -843,7 +844,7 @@ function date_minus_float_fn(dtDate1, fValue)  result(dtNewDate)
 
   class(T_DATETIME), intent(in)    :: dtDate1
   real (kind=c_float), intent(in)  :: fValue
-  type (T_DATETIME), allocatable   :: dtNewDate
+  type (T_DATETIME)                :: dtNewDate
 
   ! [ LOCALS ]
   real (kind=c_double) :: dJD

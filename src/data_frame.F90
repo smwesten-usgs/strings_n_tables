@@ -103,8 +103,6 @@ contains
     endif    
 
 
-
-
   end subroutine select_rows_from_column_sub  
 
 
@@ -318,8 +316,9 @@ contains
     type (T_STRING) :: stSubString
 
     ! [ LOCALS ]
-    character (len=64) :: sChar
     type (T_STRING) :: stString
+    real (kind=c_double) :: dValue
+    type (T_DATETIME) :: DT
 
     print *, ubound(this%Columns,1)
 
@@ -327,15 +326,29 @@ contains
  
       stString = this%stColNames%value(iIndex)
 
-      sChar = stString%asCharacter()
-
-      write(*, "(/,a)") "Variable name: "//trim(sChar)
-
+      write(*, "(/,a)") "Variable name: "//asCharacter(stString)
       write (*, fmt="(5x, a, i8)") "Count: ", int( this%Columns(iIndex)%pColumn%count( this%lMask ) )
-      write (*, fmt="(7x, a, g15.5)") "Min: ", this%Columns(iIndex)%pColumn%min( this%lMask )
-      write (*, fmt="(7x, a, g15.5)") "Max: ", this%Columns(iIndex)%pColumn%max( this%lMask )
-      write (*, fmt="(7x, a, g15.5)") "Sum: ", this%Columns(iIndex)%pColumn%sum( this%lMask )
-      write (*, fmt="(7x, a, g15.5)") "Mean: ", this%Columns(iIndex)%pColumn%mean( this%lMask )
+
+      select case ( this%Columns(iIndex)%pColumn%datatype() )
+
+        case (INTEGER_DATA, FLOAT_DATA, DOUBLE_DATA)
+
+          write (*, fmt="(7x, a, g15.5)") "Min: ", this%Columns(iIndex)%pColumn%min( this%lMask )
+          write (*, fmt="(7x, a, g15.5)") "Max: ", this%Columns(iIndex)%pColumn%max( this%lMask )
+          write (*, fmt="(7x, a, g15.5)") "Sum: ", this%Columns(iIndex)%pColumn%sum( this%lMask )
+          write (*, fmt="(7x, a, g15.5)") "Mean: ", this%Columns(iIndex)%pColumn%mean( this%lMask )
+
+        case (T_DATETIME_DATA, T_DATE_DATA)
+ 
+          dValue = this%Columns(iIndex)%pColumn%min( this%lMask )
+          call DT%setJulianDay(dValue)
+          write(*, fmt="(7x,a,a)") "Min: ", DT%prettydate()
+
+          dValue = this%Columns(iIndex)%pColumn%max( this%lMask )
+          call DT%setJulianDay(dValue)
+          write(*, fmt="(7x,a,a)") "Max: ", DT%prettydate()
+
+      end select
 
     enddo 
 

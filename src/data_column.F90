@@ -444,7 +444,7 @@ contains
     iRecNum = this%incrementRecnum()
     pDT => this%pDatetime(iRecNum)
     call pDT%parseDate( stDatetime ) 
-    iRecNum = this%incrementRecnum()
+!    iRecNum = this%incrementRecnum()
 
   end function put_next_datetime_value_fn
 
@@ -477,7 +477,7 @@ contains
     ! [ LOCALS ]
     type (T_DATETIME), pointer :: pTime
 
-    iRecNum = this%incrementRecnum()
+    iRecNum = this%currentRecnum()
     pTime => this%pDatetime(iRecNum)
     call pTime%parseTime( stTime ) 
 
@@ -670,12 +670,12 @@ contains
           dMin = minval(this%dData, this%lMask)        
         endif  
 
-      case (T_DATETIME_DATA)
+      case (T_DATETIME_DATA, T_DATE_DATA)
 
         if (present (lMask) ) then
-          dMin = minval(this%pDatetime%iJulianDay, lMask)
+          dMin = minval(this%pDatetime%getJulianDay(), lMask)
         else
-          dMin = minval(this%pDatetime%iJulianDay, this%lMask)
+          dMin = minval(this%pDatetime%getJulianDay(), this%lMask)
         endif  
 
       case default
@@ -720,12 +720,12 @@ contains
           dMax = maxval(this%dData, this%lMask)        
         endif  
 
-      case (T_DATETIME_DATA)
+      case (T_DATETIME_DATA, T_DATE_DATA)
 
         if (present (lMask) ) then
-          dMax = maxval(this%pDatetime%iJulianDay, lMask)
+          dMax = maxval(this%pDatetime%getJulianDay(), lMask)
         else
-          dMax = maxval(this%pDatetime%iJulianDay, this%lMask)
+          dMax = maxval(this%pDatetime%getJulianDay(), this%lMask)
         endif  
 
       case default

@@ -54,10 +54,17 @@ contains
   procedure, private :: set_mask_double_sub
   !> DOXYGEN_IMPL data_column::set_mask_datetime_sub
   procedure, private :: set_mask_datetime_sub
+  !> DOXYGEN_IMPL data_column::set_mask_string_sub
+  procedure, private :: set_mask_string_sub
+  !> DOXYGEN_IMPL data_column::set_mask_char_sub
+  procedure, private :: set_mask_char_sub
+
   generic, public    :: select => set_mask_int_sub, &
                                   set_mask_float_sub, &
                                   set_mask_double_sub, &
-                                  set_mask_datetime_sub
+                                  set_mask_datetime_sub, &
+                                  set_mask_string_sub, &
+                                  set_mask_char_sub
 
   !> DOXYGEN_IMPL data_column::create_new_column_sub
   procedure, private :: create_new_column_sub
@@ -353,6 +360,124 @@ contains
     end select  
 
   end subroutine set_mask_datetime_sub
+
+
+
+  subroutine set_mask_string_sub(this, stValue1, iComparison, stValue2)
+
+    class (T_DATA_COLUMN), intent(inout)       :: this
+    type (T_STRING), intent(in)                :: stValue1
+    integer (kind=c_int), intent(in)           :: iComparison
+    type (T_STRING), intent(in), optional      :: stValue2
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int), allocatable :: iMatches(:)
+
+    this%lMask = lFALSE
+
+    if (iComparison == OUTSIDE_RANGE .or. iComparison == INSIDE_RANGE) &
+      call assert(present(stValue2), "The second value is not optional for this comparison type", &
+        __FILE__, __LINE__)
+
+    select case (iComparison)
+
+      case (GT)
+
+
+      case (GE)
+
+
+      case (LT)
+
+      
+      case (LE)
+
+
+      case (EQ)
+
+        iMatches = this%stData%which(stValue1)
+
+        if (size(iMatches,1) > 0) then
+          
+          do iIndex=1, ubound(iMatches,1)
+            if (iMatches(iIndex) <= ubound(this%lMask,1))   this%lMask( iMatches(iIndex) ) = lTRUE
+          enddo  
+        endif
+
+      case (OUTSIDE_RANGE)
+
+
+      case (INSIDE_RANGE)
+
+
+      case default
+
+        call die("Unhandled select case option", __FILE__, __LINE__)
+
+    end select  
+
+  end subroutine set_mask_string_sub
+
+
+
+
+  subroutine set_mask_char_sub(this, sChar1, iComparison, sChar2)
+
+    class (T_DATA_COLUMN), intent(inout)       :: this
+    character (len=*), intent(in)              :: sChar1
+    integer (kind=c_int), intent(in)           :: iComparison
+    character (len=*), intent(in), optional    :: sChar2
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int), allocatable :: iMatches(:)
+
+    this%lMask = lFALSE
+
+    if (iComparison == OUTSIDE_RANGE .or. iComparison == INSIDE_RANGE) &
+      call assert(present(sChar2), "The second value is not optional for this comparison type", &
+        __FILE__, __LINE__)
+
+    select case (iComparison)
+
+      case (GT)
+
+
+      case (GE)
+
+
+      case (LT)
+
+      
+      case (LE)
+
+
+      case (EQ)
+
+        iMatches = this%stData%which(sChar1)
+
+        if (size(iMatches,1) > 0) then
+          
+          do iIndex=1, ubound(iMatches,1)
+            if (iMatches(iIndex) <= ubound(this%lMask,1))   this%lMask( iMatches(iIndex) ) = lTRUE
+          enddo  
+        endif
+
+      case (OUTSIDE_RANGE)
+
+
+      case (INSIDE_RANGE)
+
+
+      case default
+
+        call die("Unhandled select case option", __FILE__, __LINE__)
+
+    end select  
+
+  end subroutine set_mask_char_sub
+
 
 
 

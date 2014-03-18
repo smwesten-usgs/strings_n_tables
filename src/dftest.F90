@@ -55,7 +55,7 @@ program dftest
   call tFile%close()
 
 
-  call tFile%open("Q_BEC_BE_6500.ssf")
+  call tFile%open("WI_stream_obs.ssf")
 
   call stl%deallocate()
 
@@ -105,15 +105,38 @@ call stl%append("Date")
 
 !   enddo
 
-
+print *, "1) -----------------------"
   call df2%summarize()
 
   pColumn => df2%getcol( "Discharge" )
   call pColumn%select(300.,GT)
+
+print *, "2) -----------------------"
+
   call df2%summarize()
 
-  call df2%select( sColname="Discharge", iComparison=GT, fValue=300. )
+  call df2%select( sColname="Discharge", iComparison=GT, fValue1=300. )
 
-  call df2%summarize()
+
+  pColumn => df2%getcol( "USGS_ID" )
+  stl = pColumn%stData%unique()
+
+  print *, "Number of unique station IDs:", stl%count()
+  
+  print *, ""
+  print *, "STATIONS:"
+  call stl%print()
+
+  do iIndex = 1, stl%count()
+
+    print *, ""
+    print *, "    Summary for station: ", stl%sl(iIndex)%asCharacter()
+    print *, "-------------------------------------------------------------"
+
+    call df2%select( sColname="USGS_ID", iComparison=EQ, stValue1=stl%value(iIndex) )
+
+    call df2%summarize()
+
+  enddo  
 
 end program dftest

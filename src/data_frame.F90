@@ -41,8 +41,19 @@ contains
   procedure, private :: find_column_by_name_fn
   generic, public    :: findcol => find_column_by_name_fn
 
-  procedure, private :: select_rows_from_column_sub
-  generic, public    :: select => select_rows_from_column_sub
+  procedure, private :: select_rows_from_column_int_sub
+  procedure, private :: select_rows_from_column_float_sub
+  procedure, private :: select_rows_from_column_double_sub
+  procedure, private :: select_rows_from_column_datetime_sub
+  procedure, private :: select_rows_from_column_string_sub
+  procedure, private :: select_rows_from_column_char_sub
+
+  generic, public    :: select => select_rows_from_column_int_sub, &
+                                  select_rows_from_column_float_sub, &
+                                  select_rows_from_column_double_sub, &
+                                  select_rows_from_column_datetime_sub, &
+                                  select_rows_from_column_string_sub, &
+                                  select_rows_from_column_char_sub
 
   procedure, private :: get_column_pointer_byindex_fn
   procedure, private :: get_column_pointer_byname_fn
@@ -54,47 +65,30 @@ end type T_DATA_FRAME
 
 contains
 
-  subroutine select_rows_from_column_sub( this, sColname, iComparison, iValue, fValue, dValue, dtValue, stValue )
+
+  subroutine select_rows_from_column_int_sub( this, sColname, iComparison, iValue1, iValue2)
 
     class (T_DATA_FRAME), intent(inout)            :: this
     character (len=*), intent(in)                  :: sColname
     integer (kind=c_int), intent(in)               :: iComparison
-    integer (kind=c_int), intent(in), optional     :: iValue
-    real (kind=c_float), intent(in), optional      :: fValue
-    real (kind=c_double), intent(in), optional     :: dValue
-    type (T_DATETIME), intent(in), optional        :: dtValue
-    type (T_STRING), intent(in), optional          :: stValue
+    integer (kind=c_int), intent(in)               :: iValue1
+    integer (kind=c_int), intent(in), optional     :: iValue2
 
     ! [ LOCALS ] 
     class (T_DATA_COLUMN), pointer :: pColumn
+    type (T_STRING) :: stString
 
     pColumn => this%getcol( sColname )
 
     if ( associated(pColumn) ) then
 
-      if (present(iValue) ) then
+      if (present(iValue2) ) then
 
-        call pColumn%select( iValue, iComparison )
+        call pColumn%select( iValue1, iComparison, iValue2 )
+
+      else
       
-      elseif (present(fValue) ) then
-
-        call pColumn%select( fValue, iComparison )        
-
-      elseif (present(dValue) ) then
-
-        call pColumn%select( dValue, iComparison )        
-
-      elseif (present(dValue) ) then
-
-        call pColumn%select( fValue, iComparison )        
-
-      elseif (present(dtValue) ) then
-
-        call pColumn%select( dtValue, iComparison )        
-
-!      elseif (present(stValue) ) then
-
-!        call pColumn%select( stValue, iComparison )        
+        call pColumn%select( iValue1, iComparison )  
 
       endif
 
@@ -102,8 +96,176 @@ contains
       
     endif    
 
+  end subroutine select_rows_from_column_int_sub  
 
-  end subroutine select_rows_from_column_sub  
+
+
+
+  subroutine select_rows_from_column_float_sub( this, sColname, iComparison, fValue1, fValue2)
+
+    class (T_DATA_FRAME), intent(inout)            :: this
+    character (len=*), intent(in)                  :: sColname
+    integer (kind=c_int), intent(in)               :: iComparison
+    real (kind=c_float), intent(in)                :: fValue1
+    real (kind=c_float), intent(in), optional      :: fValue2
+
+    ! [ LOCALS ] 
+    class (T_DATA_COLUMN), pointer :: pColumn
+    type (T_STRING) :: stString
+
+    pColumn => this%getcol( sColname )
+
+    if ( associated(pColumn) ) then
+
+      if (present(fValue2) ) then
+
+        call pColumn%select( fValue1, iComparison, fValue2 )
+
+      else
+      
+        call pColumn%select( fValue1, iComparison )  
+
+      endif
+
+      this%lMask = pColumn%lMask
+      
+    endif    
+
+  end subroutine select_rows_from_column_float_sub  
+
+
+
+  subroutine select_rows_from_column_double_sub( this, sColname, iComparison, dValue1, dValue2)
+
+    class (T_DATA_FRAME), intent(inout)            :: this
+    character (len=*), intent(in)                  :: sColname
+    integer (kind=c_int), intent(in)               :: iComparison
+    real (kind=c_double), intent(in)               :: dValue1
+    real (kind=c_double), intent(in), optional     :: dValue2
+
+    ! [ LOCALS ] 
+    class (T_DATA_COLUMN), pointer :: pColumn
+    type (T_STRING) :: stString
+
+    pColumn => this%getcol( sColname )
+
+    if ( associated(pColumn) ) then
+
+      if (present(dValue2) ) then
+
+        call pColumn%select( dValue1, iComparison, dValue2 )
+
+      else
+      
+        call pColumn%select( dValue1, iComparison )  
+
+      endif
+
+      this%lMask = pColumn%lMask
+      
+    endif    
+
+  end subroutine select_rows_from_column_double_sub  
+
+
+  subroutine select_rows_from_column_datetime_sub( this, sColname, iComparison, dtValue1, dtValue2)
+
+    class (T_DATA_FRAME), intent(inout)            :: this
+    character (len=*), intent(in)                  :: sColname
+    integer (kind=c_int), intent(in)               :: iComparison
+    type (T_DATETIME), intent(in)                  :: dtValue1
+    type (T_DATETIME), intent(in), optional        :: dtValue2
+
+    ! [ LOCALS ] 
+    class (T_DATA_COLUMN), pointer :: pColumn
+    type (T_STRING) :: stString
+
+    pColumn => this%getcol( sColname )
+
+    if ( associated(pColumn) ) then
+
+      if (present(dtValue2) ) then
+
+        call pColumn%select( dtValue1, iComparison, dtValue2 )
+
+      else
+      
+        call pColumn%select( dtValue1, iComparison )  
+
+      endif
+
+      this%lMask = pColumn%lMask
+      
+    endif    
+
+  end subroutine select_rows_from_column_datetime_sub  
+
+
+
+  subroutine select_rows_from_column_string_sub( this, sColname, iComparison, stValue1, stValue2)
+
+    class (T_DATA_FRAME), intent(inout)            :: this
+    character (len=*), intent(in)                  :: sColname
+    integer (kind=c_int), intent(in)               :: iComparison
+    type (T_STRING), intent(in)                    :: stValue1
+    type (T_STRING), intent(in), optional          :: stValue2
+
+    ! [ LOCALS ] 
+    class (T_DATA_COLUMN), pointer :: pColumn
+    type (T_STRING) :: stString
+
+    pColumn => this%getcol( sColname )
+
+    if ( associated(pColumn) ) then
+
+      if (present(stValue2) ) then
+
+        call pColumn%select( stValue1, iComparison, stValue2 )
+
+      else
+      
+        call pColumn%select( stValue1, iComparison )  
+
+      endif
+
+      this%lMask = pColumn%lMask
+      
+    endif    
+
+  end subroutine select_rows_from_column_string_sub  
+
+
+  subroutine select_rows_from_column_char_sub( this, sColname, iComparison, cValue1, cValue2)
+
+    class (T_DATA_FRAME), intent(inout)            :: this
+    character (len=*), intent(in)                  :: sColname
+    integer (kind=c_int), intent(in)               :: iComparison
+    character (len=*), intent(in)                  :: cValue1
+    character (len=*), intent(in), optional        :: cValue2
+
+    ! [ LOCALS ] 
+    class (T_DATA_COLUMN), pointer :: pColumn
+    type (T_STRING) :: stString
+
+    pColumn => this%getcol( sColname )
+
+    if ( associated(pColumn) ) then
+
+      if (present(cValue2) ) then
+
+        call pColumn%select( cValue1, iComparison, cValue2 )
+
+      else
+      
+        call pColumn%select( cValue1, iComparison )  
+
+      endif
+
+      this%lMask = pColumn%lMask
+      
+    endif    
+
+  end subroutine select_rows_from_column_char_sub  
 
 
 
@@ -319,8 +481,6 @@ contains
     type (T_STRING) :: stString
     real (kind=c_double) :: dValue
     type (T_DATETIME) :: DT
-
-    print *, ubound(this%Columns,1)
 
     do iIndex = 1, ubound(this%Columns,1)
  

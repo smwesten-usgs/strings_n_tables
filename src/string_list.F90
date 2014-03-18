@@ -31,11 +31,21 @@ module string_list
     procedure, private :: return_string_at_index_fn
     generic, public    :: value => return_string_at_index_fn
 
+    procedure, private :: break_char_into_list_sub
+    procedure, private :: break_string_into_list_sub
+    generic, public    :: parse => break_char_into_list_sub, &
+                                   break_string_into_list_sub
+
     procedure, private :: return_matching_lines_fn
     generic, public    :: grep => return_matching_lines_fn
 
-    procedure, private :: return_position_of_matching_text_fn
-    generic, public    :: which => return_position_of_matching_text_fn
+    procedure, private :: return_unique_values_fn
+    generic, public    :: unique => return_unique_values_fn
+
+    procedure, private :: return_position_of_matching_string_fn
+    procedure, private :: return_position_of_matching_char_fn
+    generic, public    :: which => return_position_of_matching_string_fn, &
+                                  return_position_of_matching_char_fn
 
     procedure, private :: return_count_of_matching_lines_fn
     generic, public    :: countMatches => return_count_of_matching_lines_fn
@@ -61,8 +71,60 @@ contains
     class (T_STRING_LIST), intent(inout)           :: this
     character (len=64), intent(in), allocatable     :: sCharlist(:)
 
+
   end subroutine make_list_from_char_sub
   
+  
+  subroutine break_char_into_list_sub(this, sChar)
+
+    class (T_STRING_LIST)          :: this
+    character (len=*), intent(in)  :: sChar
+
+    ! [ LOCALS ]
+    type (T_STRING_LIST) :: stlResult
+    type (T_STRING) :: stTempString
+    type (T_STRING) :: stTempString2
+
+    stTempString = sChar
+
+    do
+
+      stTempString2 = stTempString%chomp()
+
+      if (len(stTempString2) > 0) then
+        call this%append(stTempString2)
+      else
+        exit
+      endif
+
+    end do
+
+  end subroutine break_char_into_list_sub
+
+
+
+  subroutine break_string_into_list_sub(this, stString)
+
+    class (T_STRING_LIST)          :: this
+    type (T_STRING)                :: stString
+
+    ! [ LOCALS ]
+    type (T_STRING) :: stTempString
+
+    do
+
+      stTempString = stString%chomp()
+
+      if (len(stTempString) > 0) then
+        call this%append(stTempString)
+      else
+        exit
+      endif
+
+    end do
+
+  end subroutine break_string_into_list_sub
+
 
 
   function return_size_of_vector_fn(this)   result(iResult)
@@ -100,6 +162,37 @@ contains
 
   end subroutine deallocate_all_list_items_sub
 
+
+  function return_unique_values_fn(this)    result(stList)
+
+    class (T_STRING_LIST), intent(in)   :: this
+    type (T_STRING_LIST)                :: stList
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iIndex
+    integer (kind=c_int) :: iIndex2
+
+    if (this%count() > 0)   call stList%append( this%value(1) )
+
+
+    if (this%count() > 1) then
+
+main: do iIndex = 2,this%count()
+
+        do iIndex2 = 1, stList%count()
+
+          if ( stList%value(iIndex2) == this%value(iIndex) ) cycle main
+
+        enddo  
+
+        call stList%append( this%value(iIndex) )
+
+      enddo main
+
+    endif      
+
+  end function return_unique_values_fn
+    
 
   subroutine string_list_to_string_list_sub(stListOut, stListIn)
 
@@ -216,8 +309,19 @@ contains
   end function return_count_of_matching_lines_fn
   
 
+  function return_position_of_matching_string_fn(this, stString)     result(iResult)
 
-  function return_position_of_matching_text_fn(this, sChar)     result(iResult)
+    class (T_STRING_LIST), intent(in)                    :: this
+    type (T_STRING), intent(in)                          :: stString
+    integer (kind=c_int), dimension(:), allocatable      :: iResult
+
+    iResult = this%which( stString%asCharacter() )
+
+  end function return_position_of_matching_string_fn
+
+
+
+  function return_position_of_matching_char_fn(this, sChar)     result(iResult)
 
     class (T_STRING_LIST), intent(in)                    :: this
     character (len=*), intent(in)                        :: sChar
@@ -258,7 +362,7 @@ contains
 
     endif  
 
-  end function return_position_of_matching_text_fn
+  end function return_position_of_matching_char_fn
 
 
 

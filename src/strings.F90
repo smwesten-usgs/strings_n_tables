@@ -59,7 +59,10 @@ module strings
 
     !> DOXYGEN_IMPL strings::split_and_return_text_fn
     procedure, private :: split_and_return_text_fn
+    !> DOXYGEN_IMPL strings::split_and_return_string_fn
+    procedure, private :: split_and_return_string_fn
     generic, public    :: chomp => split_and_return_text_fn
+    generic, public    :: chompstr => split_and_return_string_fn
  
     !> DOXYGEN_IMPL strings::replace_character_sub
     procedure, private :: replace_character_sub
@@ -461,7 +464,10 @@ contains
 
 
 
-
+  !> Copy contents of a string object to a new string object
+  !!
+  !! @param[inout] stStringOut variable-length string object to be copied to
+  !! @param[in] stStringIn variable-length string object to be copied from
   subroutine string_to_string_sub(stStringOut, stStringIn)
 
     type (T_STRING), intent(inout)  :: stStringOut
@@ -667,6 +673,32 @@ contains
     endif  
 
   end function split_and_return_text_fn  	
+
+
+  function split_and_return_string_fn(this, sDelimiters)   result(stString)
+
+    class (T_STRING), intent(inout)                :: this
+    character (len=*), optional                    :: sDelimiters
+    type (T_STRING)                                :: stString
+    
+    ! [ LOCALS ]
+    character (len=:), allocatable  :: sChar
+
+    if (present(sDelimiters) ) then
+
+      sChar = this%chomp(sDelimiters)
+
+    else
+
+      sChar = this%chomp()
+
+    endif
+
+    stString = sChar
+
+  end function split_and_return_string_fn
+
+
 
   subroutine replace_character_sub(this, sFind, sReplace)
 

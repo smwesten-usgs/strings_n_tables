@@ -8,7 +8,7 @@ module options
 
   private
 
-  !> data structure to hold keywords, arguments, a help string, and a pointer to the initialization sub 
+  !> data structure to hold kwList, arguments, a help string, and a pointer to the initialization sub 
   type, public :: T_KEYWORD_LIST
     type (T_STRING_LIST)  :: stlKeyword
     type (T_STRING_LIST)  :: stlArguments
@@ -27,8 +27,9 @@ module options
   
   type, public :: T_BLOCK
     type (T_STRING_LIST)                :: stlBlockName
-  	type (T_KEYWORD_LIST), allocatable  :: tOpts(:)
+  	type (T_KEYWORD_LIST), allocatable  :: kwList(:)
     procedure(blockSub), pointer        :: init_sub => null()
+    procedure(checkBlockSub), pointer   :: check_block_sub => null()
 
   contains
   
@@ -36,6 +37,7 @@ module options
     procedure :: getBlocknames => get_block_names_fn
     procedure :: addKeyword => add_keyword_list_sub
     procedure :: initialize => call_initialize_block_sub
+    procedure :: checkBlock => call_check_block_sub
 
   end type T_BLOCK
 
@@ -51,6 +53,13 @@ module options
       import :: T_KEYWORD_LIST
       class (T_KEYWORD_LIST) :: this
     end subroutine keySub
+  end interface
+
+  abstract interface
+    subroutine checkBlockSub(this)
+      import :: T_BLOCK
+      class (T_BLOCK) :: this
+    end subroutine checkBlockSub
   end interface
 
 contains
@@ -155,22 +164,22 @@ contains
   end function get_arguments_fn
 
   
-  subroutine add_keyword_list_sub(this, tKeyword)
+  subroutine add_keyword_list_sub(this, kwList)
 
     class (T_BLOCK), intent(inout)    :: this
-    type (T_KEYWORD_LIST), intent(in) :: tKeyword
+    type (T_KEYWORD_LIST), intent(in) :: kwList
 
     ! [ LOCALS ]
     integer (kind=c_int) :: iCount
-    type (T_KEYWORD_LIST), allocatable :: tTempOpts(:)
+    type (T_KEYWORD_LIST), allocatable :: kwTempList(:)
 
-    iCount = ubound(this%tOpts,1)
+    iCount = ubound(this%kwList,1)
 
-    allocate(tTempOpts(iCount + 1))
+    allocate(kwTempList(iCount + 1))
 
-    tTempOpts(1:iCount) = this%tOpts(1:iCount)
-    tTempOpts(iCount + 1) = tKeyWord
-    this%tOpts = tTempOpts
+    kwTempList(1:iCount) = this%kwList(1:iCount)
+    kwTempList(iCount + 1) = kwList
+    this%kwList = kwTempList
 
   end subroutine add_keyword_list_sub
 

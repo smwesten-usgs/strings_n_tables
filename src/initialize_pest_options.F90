@@ -1,7 +1,8 @@
 module initialize_pest_options
  
   use types
-  use options
+  use keyword_list
+  use block
   implicit none
 
 contains

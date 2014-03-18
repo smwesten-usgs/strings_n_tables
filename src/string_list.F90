@@ -89,7 +89,7 @@ contains
 
     do
 
-      stTempString2 = stTempString%chomp()
+      call stTempString%chomp( stTempString2 )
 
       if (len(stTempString2) > 0) then
         call this%append(stTempString2)
@@ -113,7 +113,7 @@ contains
 
     do
 
-      stTempString = stString%chomp()
+      call stString%chomp( stTempString )
 
       if (len(stTempString) > 0) then
         call this%append(stTempString)

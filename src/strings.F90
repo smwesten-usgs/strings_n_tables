@@ -57,12 +57,12 @@ module strings
     procedure, private :: convert_to_lowercase_fn
     generic, public    :: asLowercase => convert_to_lowercase_fn
 
-    !> DOXYGEN_IMPL strings::split_and_return_text_fn
-    procedure, private :: split_and_return_text_fn
-    !> DOXYGEN_IMPL strings::split_and_return_string_fn
-    procedure, private :: split_and_return_string_fn
-    generic, public    :: chomp => split_and_return_text_fn
-    generic, public    :: chompstr => split_and_return_string_fn
+    !> DOXYGEN_IMPL strings::split_and_return_text_sub
+    procedure, private :: split_and_return_text_sub
+    !> DOXYGEN_IMPL strings::split_and_return_string_sub
+    procedure, private :: split_and_return_string_sub
+    generic, public    :: chomp => split_and_return_text_sub, &
+                                   split_and_return_string_sub
  
     !> DOXYGEN_IMPL strings::replace_character_sub
     procedure, private :: replace_character_sub
@@ -642,11 +642,11 @@ contains
 
 
     
- function split_and_return_text_fn(this, sDelimiters)    result(sChar)
+ subroutine split_and_return_text_sub(this, sChar, sDelimiters) 
 
-    class (T_STRING), intent(inout)           :: this
-    character (len=*), intent(in), optional   :: sDelimiters
-    character (len=:), allocatable            :: sChar
+    class (T_STRING), intent(inout)                :: this
+    character (len=:), allocatable, intent(out)    :: sChar
+    character (len=*), intent(in), optional        :: sDelimiters
 
     ! [ LOCALS ]
     character (len=:), allocatable :: sMyDelimiters
@@ -672,10 +672,10 @@ contains
       this = trim(adjustl(sTempText(iIndex + 1:) ) )
     endif  
 
-  end function split_and_return_text_fn  	
+  end subroutine split_and_return_text_sub  	
 
 
-  function split_and_return_string_fn(this, sDelimiters)   result(stString)
+  subroutine split_and_return_string_sub(this, stString, sDelimiters) 
 
     class (T_STRING), intent(inout)                :: this
     character (len=*), optional                    :: sDelimiters
@@ -686,17 +686,17 @@ contains
 
     if (present(sDelimiters) ) then
 
-      sChar = this%chomp(sDelimiters)
+      call this%chomp( sChar, sDelimiters )
 
     else
 
-      sChar = this%chomp()
+      call this%chomp( sChar )
 
     endif
 
     stString = sChar
 
-  end function split_and_return_string_fn
+  end subroutine split_and_return_string_sub
 
 
 

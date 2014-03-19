@@ -514,6 +514,26 @@ main: do iIndex = 2,this%count()
 
 !------------------------------------------------------------------------------
 
+  subroutine append_int_sub(this, iValue)
+
+    class (T_STRING_LIST), intent(inout) :: this
+    integer (kind=c_int), intent(in)     :: iValue
+
+    ! [ LOCALS ]
+    type (T_STRING) :: stString
+
+    call list_check_allocation_sub(this)
+
+    this%iCount = this%iCount + 1
+    this%iCurrentPos = this%iCount
+
+    stString = iValue
+    this%sl(this%iCount) = stString
+
+  end subroutine append_int_sub
+
+!------------------------------------------------------------------------------
+
   subroutine append_char_sub(this, sChar)
 
     class (T_STRING_LIST), intent(inout) :: this

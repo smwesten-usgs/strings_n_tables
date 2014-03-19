@@ -3,7 +3,7 @@ module block
   use iso_c_binding, only : c_int, c_float, c_double, c_char
   use strings
   use string_list
-  use keyword_list
+  use keywords
 
   implicit none
 
@@ -11,7 +11,7 @@ module block
   
   type, public :: T_BLOCK
     type (T_STRING_LIST)                :: stlBlockName
-  	type (T_KEYWORD_LIST), allocatable  :: kwList(:)
+  	type (T_KEYWORDS), allocatable      :: kwKeyPairs(:)
     procedure(blockSub), pointer        :: init_sub => null()
     procedure(checkBlockSub), pointer   :: check_block_sub => null()
 
@@ -76,12 +76,12 @@ contains
     stBlockname = this%getBlockName()
     write(*, fmt="(/,a)") "BEGIN "//stBlockname%asCharacter()
 
-    do iIndex = 1, ubound(this%kwList,1)
+    do iIndex = 1, ubound(this%kwKeyPairs,1)
       ! OK hold on...we are attempting to iterate over the
-      ! keywords in the iIndex-th member of kwList
-      iCount = this%kwList(iIndex)%stlKeyword%count()
+      ! keywords in the iIndex-th member of kwKeyPairs
+      iCount = this%kwKeyPairs(iIndex)%stlKeyword%count()
 
-      associate (keypair => this%kwList(iIndex) )
+      associate (keypair => this%kwKeyPairs(iIndex) )
       
         do iIndex2 = 1, iCount
 
@@ -101,7 +101,7 @@ contains
 
   end subroutine print_block_sub
     
-
+  !> Associate a procedure pointer with an initialization routine. 
   subroutine call_initialize_block_sub(this, proc)
 
     class (T_BLOCK), intent(inout)  :: this
@@ -112,7 +112,7 @@ contains
 
   end subroutine call_initialize_block_sub
 
-
+  !> Associate a procedure pointer with code that performs a basic check on inputs.
   subroutine call_check_block_sub(this, proc)
 
     class (T_BLOCK), intent(inout)  :: this
@@ -140,7 +140,12 @@ contains
   end subroutine add_block_name_sub
 
 
-
+  !> Return a list of one or more names that identify the block.
+  !!
+  !! More than one name might be returned to allow for possible
+  !! alternate spellings or to accomodate changes in terminology.
+  !! @param[in] this Object of class T_BLOCK
+  !! @retval stlString Returns a string list of class T_STRING_LIST
   function get_block_names_fn(this)    result(stlString)
     
     class (T_BLOCK), intent(in)    :: this
@@ -165,22 +170,22 @@ contains
   end function get_block_name_fn
 
   
-  subroutine add_keyword_list_sub(this, kwList)
+  subroutine add_keyword_list_sub(this, kwKeyPairs)
 
     class (T_BLOCK), intent(inout)    :: this
-    type (T_KEYWORD_LIST), intent(in) :: kwList
+    type (T_KEYWORDS), intent(in) :: kwKeyPairs
 
     ! [ LOCALS ]
     integer (kind=c_int) :: iCount
-    type (T_KEYWORD_LIST), allocatable :: kwTempList(:)
+    type (T_KEYWORDS), allocatable :: kwTempKeyPairs(:)
 
-    iCount = ubound(this%kwList,1)
+    iCount = ubound(this%kwKeyPairs,1)
 
-    allocate(kwTempList(iCount + 1))
+    allocate(kwTempKeyPairs(iCount + 1))
 
-    kwTempList(1:iCount) = this%kwList(1:iCount)
-    kwTempList(iCount + 1) = kwList
-    this%kwList = kwTempList
+    kwTempKeyPairs(1:iCount) = this%kwKeyPairs(1:iCount)
+    kwTempKeyPairs(iCount + 1) = kwKeyPairs
+    this%kwKeyPairs = kwTempKeyPairs
 
   end subroutine add_keyword_list_sub
 

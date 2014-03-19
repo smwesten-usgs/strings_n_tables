@@ -13,7 +13,7 @@ module block_list
   
   type, public :: T_BLOCK_LIST
     type (T_STRING_LIST)                :: stlBlockNames
-    type (T_BLOCK), allocatable         :: blkBlock(:)
+    type (T_BLOCK), allocatable         :: blocks(:)
 
   contains
   
@@ -35,13 +35,13 @@ contains
     integer (kind=c_int) :: iCount
     type (T_BLOCK_LIST)  :: blkTempList
 
-    iCount = ubound(this%blkBlock,1)
+    iCount = ubound(this%blocks,1)
 
-    allocate(blkTempList%blkBlock(iCount + 1))
+    allocate(blkTempList%blocks(iCount + 1))
 
-    blkTempList%blkBlock(1:iCount) = this%blkBlock(1:iCount)
-    blkTempList%blkBlock(iCount + 1) = blkBlock
-    this%blkBlock = blkTempList%blkBlock
+    blkTempList%blocks(1:iCount) = this%blocks(1:iCount)
+    blkTempList%blocks(iCount + 1) = blkBlock
+    this%blocks = blkTempList%blocks
 
     call this%stlBlockNames%append( blkBlock%stlBlockName%value(1) )
 
@@ -63,7 +63,7 @@ contains
        call die("Nonunique blocknames were used in code. Blockname = "//sBlockname, &
         __FILE__, __LINE__)
 
-    blkBlock = this%blkBlock(iIndex(1))
+    blkBlock = this%blocks(iIndex(1))
 
   end function get_block_fn
 

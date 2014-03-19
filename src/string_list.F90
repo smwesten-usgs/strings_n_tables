@@ -10,6 +10,7 @@ module string_list
   type, public :: T_STRING_LIST
     type (T_STRING), dimension(:), allocatable, public :: sl 
     integer (kind=c_int), private :: iCount = 0 
+    integer (kind=c_int), private :: iCurrentPos = 0
 
   contains
   
@@ -28,6 +29,12 @@ module string_list
 
 !    procedure :: push => push_string_fn
 !    procedure :: pop => pop_string_fn
+
+    procedure :: first => return_string_at_first_index_pos_fn
+    procedure :: last => return_string_at_last_index_pos_fn
+    procedure :: next => return_string_at_next_index_pos_fn
+    procedure :: previous => return_string_at_previous_index_pos_fn
+
     procedure, private :: return_string_at_index_fn
     generic, public    :: value => return_string_at_index_fn
 
@@ -66,15 +73,80 @@ module string_list
 
 contains
 
+  function return_string_at_first_index_pos_fn(this)      result(stString)
+
+    class (T_STRING_LIST), intent(inout)          :: this
+    type (T_STRING)                               :: stString
+ 
+    if (this%iCount > 0) then
+      stString = this%sl(1)
+      this%iCurrentPos = 1
+    else
+      stString = ""
+    endif
+
+  end function return_string_at_first_index_pos_fn
+
+!------------------------------------------------------------------------------  
+
+  function return_string_at_last_index_pos_fn(this)      result(stString)
+
+    class (T_STRING_LIST), intent(inout)          :: this
+    type (T_STRING)                               :: stString
+
+    if (this%iCount > 0) then
+      stString = this%sl(this%iCount)
+      this%iCurrentPos = this%iCount
+    else
+      stString = ""
+    endif
+
+  end function return_string_at_last_index_pos_fn
+
+!------------------------------------------------------------------------------  
+
+  function return_string_at_next_index_pos_fn(this)      result(stString)
+
+    class (T_STRING_LIST), intent(inout)          :: this
+    type (T_STRING)                               :: stString
+
+    if (this%iCount > 0) then
+      this%iCurrentPos = min(this%iCurrentPos + 1, this%iCount)
+
+      stString = this%sl(this%iCurrentPos)
+    else
+      stString = ""
+    endif
+
+  end function return_string_at_next_index_pos_fn
+
+!------------------------------------------------------------------------------  
+
+  function return_string_at_previous_index_pos_fn(this)      result(stString)
+
+    class (T_STRING_LIST), intent(inout)          :: this
+    type (T_STRING)                               :: stString
+
+    if (this%iCount > 0) then
+      this%iCurrentPos = max(this%iCurrentPos - 1, 1)
+      stString = this%sl(this%iCurrentPos)
+    else
+      stString = ""
+    endif
+
+  end function return_string_at_previous_index_pos_fn
+
+!------------------------------------------------------------------------------  
+
   subroutine make_list_from_char_sub(this, sCharlist)
 
-    class (T_STRING_LIST), intent(inout)           :: this
+    class (T_STRING_LIST), intent(inout)            :: this
     character (len=64), intent(in), allocatable     :: sCharlist(:)
-
 
   end subroutine make_list_from_char_sub
   
-  
+!------------------------------------------------------------------------------
+
   subroutine break_char_into_list_sub(this, sChar)
 
     class (T_STRING_LIST)          :: this
@@ -101,12 +173,12 @@ contains
 
   end subroutine break_char_into_list_sub
 
-
+!------------------------------------------------------------------------------
 
   subroutine break_string_into_list_sub(this, stString)
 
-    class (T_STRING_LIST)          :: this
-    type (T_STRING)                :: stString
+    class (T_STRING_LIST), intent(inout)    :: this
+    type (T_STRING), intent(inout)          :: stString
 
     ! [ LOCALS ]
     type (T_STRING) :: stTempString
@@ -125,7 +197,7 @@ contains
 
   end subroutine break_string_into_list_sub
 
-
+!------------------------------------------------------------------------------
 
   function return_size_of_vector_fn(this)   result(iResult)
 
@@ -135,8 +207,8 @@ contains
     iResult = this%iCount
 
   end function return_size_of_vector_fn
-  
 
+!------------------------------------------------------------------------------  
 
   subroutine deallocate_all_list_items_sub(this)
 
@@ -162,6 +234,7 @@ contains
 
   end subroutine deallocate_all_list_items_sub
 
+!------------------------------------------------------------------------------
 
   function return_unique_values_fn(this)    result(stList)
 
@@ -192,7 +265,8 @@ main: do iIndex = 2,this%count()
     endif      
 
   end function return_unique_values_fn
-    
+
+!------------------------------------------------------------------------------
 
   subroutine string_list_to_string_list_sub(stListOut, stListIn)
 
@@ -214,6 +288,7 @@ main: do iIndex = 2,this%count()
 
   end subroutine string_list_to_string_list_sub
 
+!------------------------------------------------------------------------------
 
   function return_string_at_index_fn(this, iIndex)  result(stString)
 
@@ -230,6 +305,7 @@ main: do iIndex = 2,this%count()
 
   end function return_string_at_index_fn  
 
+!------------------------------------------------------------------------------
 
   subroutine initialize_list_sub(this, iInitialSize)
 
@@ -261,6 +337,7 @@ main: do iIndex = 2,this%count()
 
   end subroutine initialize_list_sub
 
+!------------------------------------------------------------------------------
 
   function return_matching_lines_fn(this, sChar)     result(stString)
 
@@ -282,8 +359,8 @@ main: do iIndex = 2,this%count()
     enddo  
 
   end function return_matching_lines_fn
-  
 
+!------------------------------------------------------------------------------
 
   function return_count_of_matching_lines_fn(this, sChar)     result(iCount)
 
@@ -307,19 +384,22 @@ main: do iIndex = 2,this%count()
     enddo  
 
   end function return_count_of_matching_lines_fn
-  
+
+!------------------------------------------------------------------------------  
 
   function return_position_of_matching_string_fn(this, stString)     result(iResult)
 
-    class (T_STRING_LIST), intent(in)                    :: this
+    class (T_STRING_LIST), intent(inout)                 :: this
     type (T_STRING), intent(in)                          :: stString
     integer (kind=c_int), dimension(:), allocatable      :: iResult
 
     iResult = this%which( stString%asCharacter() )
 
+    if (iResult(1) > 0)  this%iCurrentPos = iResult(1)
+
   end function return_position_of_matching_string_fn
 
-
+!------------------------------------------------------------------------------
 
   function return_position_of_matching_char_fn(this, sChar)     result(iResult)
 
@@ -364,8 +444,7 @@ main: do iIndex = 2,this%count()
 
   end function return_position_of_matching_char_fn
 
-
-
+!------------------------------------------------------------------------------
 
   subroutine append_string_sub(this, stString)
 
@@ -375,12 +454,22 @@ main: do iIndex = 2,this%count()
     call list_check_allocation_sub(this)
 
     this%iCount = this%iCount + 1
+    this%iCurrentPos = this%iCount
+
     this%sl(this%iCount) = stString
 
   end subroutine append_string_sub  
   
+!------------------------------------------------------------------------------
 
-
+  !> Check to see whether the current list of strings has room for 
+  !! one more item. 
+  !!
+  !! If there is adequate room, nothing is done. If there is not
+  !! adequate room, a new string list is created which is 30% larger 
+  !! than the old list, the old items are copied to the new list, and
+  !! the old list is destroyed.
+  !! @param[inout] this Object of class T_STRING_LIST
   subroutine list_check_allocation_sub(this)
 
     class (T_STRING_LIST), intent(inout)  :: this
@@ -396,21 +485,21 @@ main: do iIndex = 2,this%count()
 
       iSize = ubound(this%sl,1)
 
-      !> We have reached the current maximum number of allocated
-      !> string entities in this list
-      !> NEED TO ALLOCATE MEMORY IN A NEW LIST, COPY EXISTING LIST
+      ! We have reached the current maximum number of allocated
+      ! string entities in this list
+      ! NEED TO ALLOCATE MEMORY IN A NEW LIST, COPY EXISTING LIST
       if (iSize == this%iCount) then
-        !> increase size by 30%
+        ! increase size by 30%
         iNewSize = int(real(iSize) * 0.3) + iSize
         allocate(templist%sl(iNewSize))
 
-        !> copy each existing list item to temporary list
+        ! copy each existing list item to temporary list
         do iIndex=1, iSize
           templist%sl(iIndex) = this%sl(iIndex)
         enddo
 
-        !> transfer the memory associated with templist to
-        !> the master list object
+        ! transfer the memory associated with templist to
+        ! the master list object
         call move_alloc(templist%sl, this%sl)
 
       endif
@@ -423,7 +512,7 @@ main: do iIndex = 2,this%count()
 
   end subroutine list_check_allocation_sub  
 
-
+!------------------------------------------------------------------------------
 
   subroutine append_char_sub(this, sChar)
 
@@ -436,12 +525,14 @@ main: do iIndex = 2,this%count()
     call list_check_allocation_sub(this)
 
     this%iCount = this%iCount + 1
+    this%iCurrentPos = this%iCount
+
     stString = sChar
     this%sl(this%iCount) = stString
 
   end subroutine append_char_sub  
 
-
+!------------------------------------------------------------------------------
 
   subroutine print_to_screen_sub(this)
 
@@ -462,5 +553,6 @@ main: do iIndex = 2,this%count()
 
   end subroutine print_to_screen_sub
 
+!------------------------------------------------------------------------------
   
 end module string_list

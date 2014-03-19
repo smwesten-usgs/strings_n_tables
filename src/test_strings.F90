@@ -56,10 +56,10 @@ enddo
 write(*, fmt="(/,'[',a,']',a,/,/)") pf(    ( lr(1)) &
                                      .and. (.not. lr(2)) &
                                      .and. ( lr(3)) &
-	                                 .and. lr(4) &
-	                                 .and. (.not. lr(5)) &
-	                                 .and. ( lr(6)) ), &
-	                                  "  { test of isNumeric }"
+	                                   .and. lr(4) &
+	                                   .and. (.not. lr(5)) &
+	                                   .and. ( lr(6)) ), &
+	                                   "  { test of isNumeric }"
 
 
 do iIndex=1,ubound(lr,1)
@@ -80,10 +80,10 @@ enddo
 write(*, fmt="(/,'[',a,']',a,/,/)") pf(        (.not. lr(1)) &
                                      .and. (.not. lr(2)) &
                                      .and. (.not. lr(3)) &
-	                                 .and. lr(4) &
-	                                 .and. (.not. lr(5)) &
-	                                 .and. (.not. lr(6)) ), &
-	                                  "  { test of isInteger }"
+	                                   .and. lr(4) &
+	                                   .and. (.not. lr(5)) &
+	                                   .and. (.not. lr(6)) ), &
+	                                    "  { test of isInteger }"
 
 
 
@@ -123,14 +123,38 @@ do iIndex=1,ubound(lr,1)
   write(*, fmt="(a,t24,g16.10,t42)") st%asCharacter(), st%asDouble()
 enddo
 
-
-
-
+write(*, fmt="(/,a)")  "Test of 'remove': remove ':;/,'"
+write(*, fmt="(a)") repeat("-", 40)
 st1 = "::The file, a small one, is located at c:/my/data/lives/here;"
 
 st2 = st1%remove(":/;,")
 
-print *, st1%asCharacter()
-print *, st2%asCharacter()
+write(*, fmt="(a)")  st1%asCharacter()
+write(*, fmt="(a)")  st2%asCharacter()
+
+
+write(*, fmt="(/,a)")  "Test of list navigation functions"
+write(*, fmt="(a)") repeat("-", 40)
+
+st = stl%first()
+write(*, fmt="(a)")  "First item in string list: "//st%asCharacter()
+
+st = stl%last()
+write(*, fmt="(a)")  "Last item in string list: "//st%asCharacter() 
+
+st = stl%previous()
+write(*, fmt="(a)")  "Previous item in list: "//st%asCharacter()
+
+st = stl%previous()
+write(*, fmt="(a)")  "Previous item in list: "//st%asCharacter()
+
+st = stl%previous()
+write(*, fmt="(a)")  "Previous item in list: "//st%asCharacter()
+
+st = stl%previous()
+write(*, fmt="(a)")  "Previous item in list: "//st%asCharacter()
+
+st = stl%previous()
+write(*, fmt="(a)")  "Previous item in list: "//st%asCharacter()
 
 end program test_strings

@@ -43,6 +43,25 @@ module block
 
 contains
 
+  !> Consume an entire Fortran character record and assign
+  !! values to the keys found in the keyword list.
+  !!
+  !! @param[inout] this Object of class T_BLOCK
+  !! @param[in] sRecord Record to be parsed and converted to key/value pairs
+  subroutine populate_block_by_keyword_sub(this, sRecord)
+
+    class (T_BLOCK), intent(inout)     :: this
+    character (len=*), intent(in)      :: sRecord
+
+    ! [ LOCALS ]
+    type (T_STRING) :: stString
+
+    stString = sRecord
+    
+
+  end subroutine populate_block_by_keyword_sub
+    
+
   subroutine print_block_sub(this)
 
     class (T_BLOCK), intent(in) :: this

@@ -14,19 +14,20 @@ module keyword_list
   ! integer (kind=c_int), parameter :: T_DATE_DATA = 6
   ! integer (kind=c_int), parameter :: T_TIME_DATA = 7
   
-  !> data structure to hold kwList, arguments, a help string, and a pointer to the initialization sub 
+  !> data structure to hold kwList, values, a help string, and a pointer to the initialization sub 
   type, public :: T_KEYWORD_LIST
     type (T_STRING_LIST)  :: stlKeyword
-    type (T_STRING_LIST)  :: stlArguments
+    type (T_STRING_LIST)  :: stlValues
     procedure(keySub), pointer :: init_sub => null()
     type (T_STRING)       :: stHelp
 
   contains
   
-    procedure :: addKeyPair => add_keyword_argument_pair_sub
+    procedure :: addKeyPair => add_keyword_value_pair_sub
     procedure :: addKeyword => add_keyword_sub
-    procedure :: addArgument => add_argument_sub
-    procedure :: getArguments => get_arguments_fn
+    procedure :: addValue => add_value_sub
+    procedure :: setValues => set_values_sub
+    procedure :: getValues => get_values_fn
     procedure :: initialize => call_initialize_keylist_sub
 
   end type T_KEYWORD_LIST
@@ -69,7 +70,7 @@ contains
 
 
 
-  subroutine add_argument_sub(this, sChar)
+  subroutine add_value_sub(this, sChar)
 
     class (T_KEYWORD_LIST), intent(inout) :: this
     character (len=*), intent(in)         :: sChar
@@ -79,12 +80,12 @@ contains
 
     stString = sChar
 
-    call this%stlArguments%append(stString)
+    call this%stlValues%append(stString)
 
-  end subroutine add_argument_sub
+  end subroutine add_value_sub
 
 
-  subroutine add_keyword_argument_pair_sub(this, sKeyword, sArgument)
+  subroutine add_keyword_value_pair_sub(this, sKeyword, sArgument)
 
     class (T_KEYWORD_LIST), intent(inout)    :: this
     character (len=*), intent(in)            :: sKeyword
@@ -97,18 +98,18 @@ contains
     stArgument = sArgument
 
     call this%stlKeyWord%append(stKeyword)
-    call this%stlArguments%append(stArgument)
+    call this%stlValues%append(stArgument)
 
-  end subroutine add_keyword_argument_pair_sub
+  end subroutine add_keyword_value_pair_sub
 
 
-  function get_arguments_fn(this)    result(stlString)
+  function get_values_fn(this)    result(stlString)
 
     class (T_KEYWORD_LIST), intent(in)    :: this
     type (T_STRING_LIST)                  :: stlString
 
-    stlString = this%stlArguments
+    stlString = this%stlValues
 
-  end function get_arguments_fn
+  end function get_values_fn
 
 end module keyword_list

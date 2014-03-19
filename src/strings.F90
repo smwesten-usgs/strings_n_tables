@@ -158,43 +158,69 @@ contains
     
 
 
-  function int_to_character_fn(iValue)      result(sChar)
+  function int_to_character_fn(iValue, sFormat)      result(sChar)
 
-    integer (kind=c_int), intent(in)  :: iValue
-    character (len=:), allocatable    :: sChar
+    integer (kind=c_int), intent(in)         :: iValue
+    character (len=*), intent(in), optional  :: sFormat
+    character (len=:), allocatable           :: sChar
 
     ! [ LOCALS ]
-    character(len=16) :: sBuf
+    character(len=16)               :: sBuf
+    character (len=:), allocatable  :: sFmt
+
+    if (present(sFormat) ) then
+      sFmt = "("//sFormat//")"
+    else
+      sFmt = "(i16)"
+    endif
     
-    write(sBuf, fmt="(i16)") iValue
+    write(sBuf, fmt=sFmt) iValue
     
     sChar = trim( adjustl(sBuf) )
 
   end function int_to_character_fn
 
 
-  function float_to_character_fn(fValue)      result(sChar)
+  function float_to_character_fn(fValue, sFormat)      result(sChar)
 
-    real (kind=c_float), intent(in)  :: fValue
-    character (len=:), allocatable    :: sChar
+    real (kind=c_float), intent(in)         :: fValue
+    character (len=*), intent(in), optional :: sFormat
+    character (len=:), allocatable          :: sChar
 
     ! [ LOCALS ]
+    character (len=:), allocatable :: sFmt
     character(len=16) :: sBuf
-    write(sBuf, fmt="(g0)") fValue
+
+    if (present(sFormat) ) then
+      sFmt = "("//sFormat//")"
+    else
+      sFmt = "(g0)"
+    endif
+        
+    write(sBuf, fmt=sFmt) fValue
 
     sChar = trim( adjustl(sBuf) )
 
   end function float_to_character_fn
 
 
-  function double_to_character_fn(dValue)      result(sChar)
+  function double_to_character_fn(dValue, sFormat)      result(sChar)
 
-    real (kind=c_double), intent(in)  :: dValue
-    character (len=:), allocatable    :: sChar
+    real (kind=c_double), intent(in)          :: dValue
+    character (len=*), intent(in), optional   :: sFormat
+    character (len=:), allocatable            :: sChar
 
     ! [ LOCALS ]
-    character(len=32) :: sBuf
-    write(sBuf, fmt="(g0)") dValue
+    character(len=32)              :: sBuf
+    character (len=:), allocatable :: sFmt
+
+    if (present(sFormat) ) then
+      sFmt = "("//sFormat//")"
+    else
+      sFmt = "(g0)"
+    endif
+
+    write(sBuf, fmt=sFmt) dValue
 
     sChar = trim( adjustl(sBuf) )
 
@@ -678,8 +704,8 @@ contains
   subroutine split_and_return_string_sub(this, stString, sDelimiters) 
 
     class (T_STRING), intent(inout)                :: this
+    type (T_STRING), intent(out)                   :: stString
     character (len=*), optional                    :: sDelimiters
-    type (T_STRING)                                :: stString
     
     ! [ LOCALS ]
     character (len=:), allocatable  :: sChar

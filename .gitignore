@@ -1,0 +1,9 @@
+html
+html/*
+html/*.*
+*.o
+*.mod
+*.plist
+src/stringtest
+src/dftest
+src/test

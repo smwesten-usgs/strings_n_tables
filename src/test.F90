@@ -1,6 +1,8 @@
 program test
 
 use strings
+use types
+use string_list
 use iso_c_binding, only : c_int
 implicit none
 
@@ -28,32 +30,39 @@ st = sChar
 sChar = "49"
 st1 = sChar
 
-sChar = "Crime and Punishment"
+sChar = " and Thing 2"
 st2 = sChar
 
-st3 = st1 + st2
+st3 = "Thing 1" + st2
 sChar = st3
 
-print *, sChar
+print *, "000: ", trim(sChar)
+
+print *, "001: ",dquote(sChar)
+
+st3 = dquote(st3)
+
+print *, "002: ", st3%asCharacter()
 
 st3 = st3 + st1 + 27 + " " + 3.1315
 sChar = st3
-print *, sChar
+print *, "003: ", trim(sChar)
 
-print *, st3%asCharacter()
+print *, "004: ", st3%asCharacter()
 
 st4 = "6.022169E+27"
 
-print *, st4%isNumeric()
-print *, st4%isInteger()
+print *, "005: ", st4%isNumeric()
+print *, "006: ", st4%isInteger()
 
 iIndex = 1
 
 do while( len(st) > 0)
 
   !sta(iIndex) = st%chomp(",")
-  call stl2%append( st%chomp(",") )
-  print *, stl2%sl(iIndex)%asCharacter()
+  st4 = st%chomp(",")
+  call stl2%append( st4 )
+  print *, st4%asCharacter()
   iIndex = iIndex + 1
 
 enddo	
@@ -66,11 +75,11 @@ print *, sqrt(st2%asDouble())
 
 print *, st1%asCharacter()
 
-print *, st2%asCharacter()
-print *, st2%asUppercase()
-print *, st2%asLowercase()
-call st2%toUppercase()
-print *, st2%asCharacter()
+print *, st3%asCharacter()
+print *, st3%asUppercase()
+print *, st3%asLowercase()
+call st3%toUppercase()
+print *, st3%asCharacter()
 
 print *, st2 == st2
 print *, st1 == st2

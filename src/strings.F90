@@ -12,7 +12,7 @@ module strings
 
   !> T_STRING provides variable-length strings along with numerous
   !!  convenience functions to make string manipulation less tedious
-  type, public :: T_STRING 
+  type, public :: T_STRING
     character (len=1), private, dimension(:), allocatable :: sChars
 
   contains
@@ -23,7 +23,7 @@ module strings
 
     !> DOXYGEN_IMPL strings::is_string_an_integer_fn
     procedure, private :: is_string_an_integer_fn
-    generic, public    :: isInteger => is_string_an_integer_fn 
+    generic, public    :: isInteger => is_string_an_integer_fn
 
     !> DOXYGEN_IMPL strings::convert_to_int_fn
     procedure, private :: convert_to_int_fn
@@ -34,12 +34,12 @@ module strings
     generic, public    :: asFloat => convert_to_float_fn
 
     !> DOXYGEN_IMPL strings::convert_to_double_fn
-    procedure, private :: convert_to_double_fn       
-    generic, public    :: asDouble => convert_to_double_fn  
+    procedure, private :: convert_to_double_fn
+    generic, public    :: asDouble => convert_to_double_fn
 
     !> DOXYGEN_IMPL strings::convert_to_character_fn
-    procedure, private :: convert_to_character_fn 
-    generic, public    :: asCharacter => convert_to_character_fn 
+    procedure, private :: convert_to_character_fn
+    generic, public    :: asCharacter => convert_to_character_fn
 
     !> DOXYGEN_IMPL strings::convert_to_uppercase_sub
     procedure, private :: convert_to_uppercase_sub
@@ -63,7 +63,7 @@ module strings
     procedure, private :: split_and_return_string_sub
     generic, public    :: chomp => split_and_return_text_sub, &
                                    split_and_return_string_sub
- 
+
     !> DOXYGEN_IMPL strings::replace_character_sub
     procedure, private :: replace_character_sub
     generic, public    :: replace => replace_character_sub
@@ -100,6 +100,7 @@ module strings
     procedure :: string_to_character_sub
     procedure :: character_to_string_sub
     procedure :: string_to_string_sub
+    procedure :: integer_to_string_sub
 !    procedure :: string_list_to_string_list_sub
   end interface assignment(=)
 
@@ -109,7 +110,7 @@ module strings
     procedure :: is_char_equal_to_string_fn
     procedure :: is_logical4_equal_to_logical1_fn
     procedure :: is_logical1_equal_to_logical4_fn
-  end interface operator(==)    
+  end interface operator(==)
 
 
 !   interface isNumeric
@@ -146,7 +147,7 @@ contains
     sCharOut = '"'//trim(sChar)//'"'
 
   end function dquote_char_fn
-   
+
   function dquote_string_fn(stString)   result(stStringOut)
 
     type (T_STRING), intent(in) :: stString
@@ -155,7 +156,7 @@ contains
     stStringOut = sDOUBLEQUOTE + stString + sDOUBLEQUOTE
 
   end function dquote_string_fn
-    
+
 
 
   function int_to_character_fn(iValue, sFormat)      result(sChar)
@@ -173,9 +174,9 @@ contains
     else
       sFmt = "(i16)"
     endif
-    
+
     write(sBuf, fmt=sFmt) iValue
-    
+
     sChar = trim( adjustl(sBuf) )
 
   end function int_to_character_fn
@@ -196,7 +197,7 @@ contains
     else
       sFmt = "(g0)"
     endif
-        
+
     write(sBuf, fmt=sFmt) fValue
 
     sChar = trim( adjustl(sBuf) )
@@ -249,10 +250,10 @@ contains
     call assert(iStat == 0, "Failed to deallocate memory", &
          __FILE__, __LINE__)
 
-   end subroutine deallocate_sub 
+   end subroutine deallocate_sub
 
 
-  
+
   !! Concatenate two variable-length strings
   !!
   !! @param[in] stString1 first of the two variable-length string objects
@@ -263,7 +264,7 @@ contains
     type (T_STRING), intent(in)        :: stString1
     type (T_STRING), intent(in)        :: stString2
     type (T_STRING)                    :: stConcatString
-  
+
     ! [ LOCALS ]
     integer (kind=c_int) :: iLen1, iLen2
     integer (kind=c_int) :: iIndex
@@ -275,11 +276,11 @@ contains
 
     do iIndex = 1, iLen1
       stConcatString%sChars(iIndex:iIndex) = stString1%sChars(iIndex:iIndex)
-    enddo  
+    enddo
 
     do iIndex = 1, iLen2
       stConcatString%sChars(iIndex+iLen1:iIndex+iLen1) = stString2%sChars(iIndex:iIndex)
-    enddo  
+    enddo
 
   end function concatenate_string_string_fn
 
@@ -294,7 +295,7 @@ contains
     character (len=*), intent(in)      :: sChar
     type (T_STRING), intent(in)        :: stString1
     type (T_STRING)                    :: stConcatString
-  
+
     ! [ LOCALS ]
     integer (kind=c_int) :: iLen1, iLen2
     integer (kind=c_int) :: iIndex
@@ -306,11 +307,11 @@ contains
 
     do iIndex = 1, iLen1
       stConcatString%sChars(iIndex:iIndex) = sChar(iIndex:iIndex)
-    enddo  
+    enddo
 
     do iIndex = 1, iLen2
       stConcatString%sChars(iIndex+iLen1:iIndex+iLen1) = stString1%sChars(iIndex:iIndex)
-    enddo  
+    enddo
 
   end function concatenate_char_string_fn
 
@@ -325,7 +326,7 @@ contains
     type (T_STRING), intent(in)        :: stString1
     character (len=*), intent(in)      :: sChar
     type (T_STRING)                    :: stConcatString
-  
+
     ! [ LOCALS ]
     integer (kind=c_int) :: iLen1, iLen2
     integer (kind=c_int) :: iIndex
@@ -337,11 +338,11 @@ contains
 
     do iIndex = 1, iLen1
       stConcatString%sChars(iIndex:iIndex) = stString1%sChars(iIndex:iIndex)
-    enddo  
+    enddo
 
     do iIndex = 1, iLen2
       stConcatString%sChars(iIndex+iLen1:iIndex+iLen1) = sChar(iIndex:iIndex)
-    enddo  
+    enddo
 
   end function concatenate_string_char_fn
 
@@ -357,7 +358,7 @@ contains
     type (T_STRING), intent(in)        :: stString1
     integer (kind=c_int), intent(in)   :: iValue
     type (T_STRING)                    :: stConcatString
-  
+
     ! [ LOCALS ]
     integer (kind=c_int) :: iLen1, iLen2
     integer (kind=c_int) :: iIndex
@@ -373,14 +374,14 @@ contains
 
     do iIndex = 1, iLen1
       stConcatString%sChars(iIndex:iIndex) = stString1%sChars(iIndex:iIndex)
-    enddo  
+    enddo
 
     do iIndex = 1, iLen2
       stConcatString%sChars(iIndex+iLen1:iIndex+iLen1) = sValue(iIndex:iIndex)
-    enddo  
+    enddo
 
   end function concatenate_string_int_fn
-  
+
 
   !> Concatenate a variable-length string and an real number.
   !!
@@ -393,7 +394,7 @@ contains
     type (T_STRING), intent(in)        :: stString1
     real (kind=c_float), intent(in)    :: rValue
     type (T_STRING)                    :: stConcatString
-  
+
     ! [ LOCALS ]
     integer (kind=c_int) :: iLen1, iLen2
     integer (kind=c_int) :: iIndex
@@ -409,11 +410,11 @@ contains
 
     do iIndex = 1, iLen1
       stConcatString%sChars(iIndex:iIndex) = stString1%sChars(iIndex:iIndex)
-    enddo  
+    enddo
 
     do iIndex = 1, iLen2
       stConcatString%sChars(iIndex+iLen1:iIndex+iLen1) = sValue(iIndex:iIndex)
-    enddo  
+    enddo
 
   end function concatenate_string_real_fn
 
@@ -431,7 +432,7 @@ contains
     stString = character_to_string_fn(sChar)
 
   end subroutine character_to_string_sub
-  
+
 
 
   function remove_chars_from_string_fn(this, sChar)   result(stString)
@@ -439,7 +440,7 @@ contains
     class (T_STRING), intent(in)   :: this
     character (len=*), intent(in)  :: sChar
     type (T_STRING)                :: stString
-  
+
     ! [ LOCALS ]
     integer (kind=c_int) :: iIndex, iIndex2
     integer (kind=c_int) :: iLenStr, iLenChar
@@ -452,17 +453,17 @@ contains
     iLenChar = len(sChar)
 
     if ( iLenChar > 0) then
-      
+
       iCount = 0
 
       sTempBuf = this%asCharacter()
 
       do iIndex=1, iLenStr
 
-        iResult = scan(string=sTempBuf(iIndex:iIndex), set=sChar)          
+        iResult = scan(string=sTempBuf(iIndex:iIndex), set=sChar)
 
         if ( iResult == 0 ) iCount = iCount + 1
-         
+
       enddo
 
       allocate( stString%sChars(iCount), stat=iStat)
@@ -471,18 +472,18 @@ contains
 
       do iIndex=1, iLenStr
 
-        iResult = scan(string=sTempBuf(iIndex:iIndex), set=sChar)          
+        iResult = scan(string=sTempBuf(iIndex:iIndex), set=sChar)
 
         if ( iResult == 0 ) then
 
           iIndex2 = iIndex2 + 1
           stString%sChars(iIndex2:iIndex2) = sTempBuf(iIndex:iIndex)
 
-        endif  
-         
+        endif
+
       enddo
 
-    endif  
+    endif
 
     if (iLenStr == 0 .or. iCount == 0) stString = "NA"
 
@@ -517,6 +518,33 @@ contains
 
   end subroutine string_to_string_sub
 
+  !> Assign an integer to a string object
+  !!
+  !! @param[inout] stStringOut variable-length string object
+  !! @param[in] iValue integer value to be copies to string object
+  subroutine integer_to_string_sub(stString, iValue)
+
+    type (T_STRING), intent(inout)   :: stString
+    integer (kind=c_int), intent(in) :: iValue
+
+    ! [ LOCALS ]
+    integer (kind=c_int) :: iStat
+    integer (kind=c_int) :: iIndex
+    character (len=16)   :: sChar
+
+    if (allocated(stString%sChars) ) &
+        deallocate(stString%sChars)
+
+    sChar = adjustl(asCharacter(iValue))
+
+    allocate(stString%sChars( len_trim(sChar) ), stat = iStat )
+
+    do iIndex = 1, len_trim(sChar)
+    	stString%sChars(iIndex) = sChar(iIndex:iIndex)
+    enddo
+
+  end subroutine integer_to_string_sub
+
 
   !> Convert a standard Fortran character string to a variable-length string object.
   !!
@@ -526,7 +554,7 @@ contains
 
     character (len=*), intent(in)        :: sChar
     type (T_STRING)                      :: stString
-    
+
     ! [ LOCALS ]
     integer (kind=c_int) :: iIndex
 
@@ -573,7 +601,7 @@ contains
   end function convert_to_character_fn
 
 
-  !> Return the number of characters contained in a 
+  !> Return the number of characters contained in a
   !! variable-length string object.
   !!
   !! @param [in] stString variable-length string object
@@ -591,7 +619,7 @@ contains
 
       iValue = 0
 
-    endif 
+    endif
 
   end function return_length_fn
 
@@ -609,18 +637,18 @@ contains
 
       iValue = 0
 
-    endif	
+    endif
 
   end function string_length_fn
 
-  
+
 
   function is_string_an_integer_fn(this)   result(lBool)
 
     class (T_STRING), intent(in) :: this
     logical (kind=c_bool)       :: lBool
 
-    ! [ LOCALS ] 
+    ! [ LOCALS ]
     integer (kind=c_int) :: iResult
     character (len=len(this)) :: sChar
 
@@ -649,7 +677,7 @@ contains
     class (T_STRING), intent(in) :: this
     logical (kind=c_bool)       :: lBool
 
-    ! [ LOCALS ] 
+    ! [ LOCALS ]
     integer (kind=c_int) :: iResult
     character (len=len(this)) :: sChar
 
@@ -667,8 +695,8 @@ contains
   end function is_string_numeric_fn
 
 
-    
- subroutine split_and_return_text_sub(this, sChar, sDelimiters) 
+
+ subroutine split_and_return_text_sub(this, sChar, sDelimiters)
 
     class (T_STRING), intent(inout)                :: this
     character (len=:), allocatable, intent(out)    :: sChar
@@ -684,7 +712,7 @@ contains
     else
     	sMyDelimiters = sWHITESPACE
     endif
-    
+
     sTempText = convert_to_character_fn(this)
 
     iIndex = scan( string = sTempText, &
@@ -696,17 +724,17 @@ contains
     else
       sChar = trim(adjustl( sTempText(1:iIndex-1) ) )
       this = trim(adjustl(sTempText(iIndex + 1:) ) )
-    endif  
+    endif
 
-  end subroutine split_and_return_text_sub  	
+  end subroutine split_and_return_text_sub
 
 
-  subroutine split_and_return_string_sub(this, stString, sDelimiters) 
+  subroutine split_and_return_string_sub(this, stString, sDelimiters)
 
     class (T_STRING), intent(inout)                :: this
     type (T_STRING), intent(out)                   :: stString
     character (len=*), optional                    :: sDelimiters
-    
+
     ! [ LOCALS ]
     character (len=:), allocatable  :: sChar
 
@@ -742,11 +770,11 @@ contains
         if (this%sChars(iIndex) .eq. sFind) &
           this%sChars(iIndex) = sReplace
 
-      enddo  
+      enddo
 
-    endif  
+    endif
 
-  end subroutine replace_character_sub  
+  end subroutine replace_character_sub
 
 
   function is_logical4_equal_to_logical1_fn(lBool4, lBool1)   result(lBool)
@@ -760,8 +788,8 @@ contains
     else
       lBool = lFALSE
     endif
-         
-  end function is_logical4_equal_to_logical1_fn  
+
+  end function is_logical4_equal_to_logical1_fn
 
 
   function is_logical1_equal_to_logical4_fn(lBool1, lBool4)   result(lBool)
@@ -775,15 +803,15 @@ contains
     else
       lBool = lFALSE
     endif
-         
-  end function is_logical1_equal_to_logical4_fn  
+
+  end function is_logical1_equal_to_logical4_fn
 
 
   function is_string_equal_to_string_fn(stString1, stString2)  result(lBool)
 
     type (T_STRING), intent(in) :: stString1
     type (T_STRING), intent(in) :: stString2
-    logical (kind=c_bool)       :: lBool  
+    logical (kind=c_bool)       :: lBool
 
     if (trim(stString1%asUppercase() ) .eq. &
         trim(stString2%asUppercase() ) )  then
@@ -791,10 +819,10 @@ contains
       lBool = lTRUE
 
     else
-    
+
       lBool = lFALSE
 
-    endif    
+    endif
 
   end function is_string_equal_to_string_fn
 
@@ -804,12 +832,12 @@ contains
 
     type (T_STRING), intent(in)   :: stString
     character (len=*), intent(in) :: sChar
-    logical (kind=c_bool)         :: lBool  
+    logical (kind=c_bool)         :: lBool
 
     ! [ LOCALS ]
     type (T_STRING) :: stString2
 
-    stString2 = sChar  
+    stString2 = sChar
 
     if (trim(stString%asUppercase() ) .eq. &
         trim(stString2%asUppercase() ) )  then
@@ -817,10 +845,10 @@ contains
       lBool = lTRUE
 
     else
-    
+
       lBool = lFALSE
 
-    endif    
+    endif
 
   end function is_string_equal_to_char_fn
 
@@ -830,12 +858,12 @@ contains
 
     character (len=*), intent(in) :: sChar
     type (T_STRING), intent(in)   :: stString
-    logical (kind=c_bool)         :: lBool  
+    logical (kind=c_bool)         :: lBool
 
     ! [ LOCALS ]
     type (T_STRING) :: stString2
 
-    stString2 = sChar  
+    stString2 = sChar
 
     if (trim(stString%asUppercase() ) .eq. &
         trim(stString2%asUppercase() ) )  then
@@ -843,10 +871,10 @@ contains
       lBool = lTRUE
 
     else
-    
+
       lBool = lFALSE
 
-    endif    
+    endif
 
   end function is_char_equal_to_string_fn
 
@@ -864,7 +892,7 @@ contains
     if (this%isInteger()) then
       read(sTempText, fmt=*) iResult
     else
-      iResult = - ( huge(iResult) - 100 )  
+      iResult = - ( huge(iResult) - 100 )
     endif
 
   end function convert_to_int_fn
@@ -884,7 +912,7 @@ contains
     if (this%isNumeric()) then
       read(sTempText, fmt=*) rResult
     else
-      rResult = - ( huge(rResult) - 100. )    
+      rResult = - ( huge(rResult) - 100. )
     endif
 
   end function convert_to_float_fn
@@ -906,7 +934,7 @@ contains
     if ( this%isNumeric() ) then
       read(sTempText, fmt=*) dResult
     else
-      dResult = - ( huge(dResult) - 100. )    
+      dResult = - ( huge(dResult) - 100. )
     endif
 
   end function convert_to_double_fn

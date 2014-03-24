@@ -74,7 +74,7 @@ contains
     integer (kind=c_int), intent(in)               :: iValue1
     integer (kind=c_int), intent(in), optional     :: iValue2
 
-    ! [ LOCALS ] 
+    ! [ LOCALS ]
     class (T_DATA_COLUMN), pointer :: pColumn
     type (T_STRING) :: stString
 
@@ -87,16 +87,16 @@ contains
         call pColumn%select( iValue1, iComparison, iValue2 )
 
       else
-      
-        call pColumn%select( iValue1, iComparison )  
+
+        call pColumn%select( iValue1, iComparison )
 
       endif
 
       this%lMask = pColumn%lMask
-      
-    endif    
 
-  end subroutine select_rows_from_column_int_sub  
+    endif
+
+  end subroutine select_rows_from_column_int_sub
 
 
 
@@ -109,7 +109,7 @@ contains
     real (kind=c_float), intent(in)                :: fValue1
     real (kind=c_float), intent(in), optional      :: fValue2
 
-    ! [ LOCALS ] 
+    ! [ LOCALS ]
     class (T_DATA_COLUMN), pointer :: pColumn
     type (T_STRING) :: stString
 
@@ -122,16 +122,16 @@ contains
         call pColumn%select( fValue1, iComparison, fValue2 )
 
       else
-      
-        call pColumn%select( fValue1, iComparison )  
+
+        call pColumn%select( fValue1, iComparison )
 
       endif
 
       this%lMask = pColumn%lMask
-      
-    endif    
 
-  end subroutine select_rows_from_column_float_sub  
+    endif
+
+  end subroutine select_rows_from_column_float_sub
 
 
 
@@ -143,7 +143,7 @@ contains
     real (kind=c_double), intent(in)               :: dValue1
     real (kind=c_double), intent(in), optional     :: dValue2
 
-    ! [ LOCALS ] 
+    ! [ LOCALS ]
     class (T_DATA_COLUMN), pointer :: pColumn
     type (T_STRING) :: stString
 
@@ -156,16 +156,16 @@ contains
         call pColumn%select( dValue1, iComparison, dValue2 )
 
       else
-      
-        call pColumn%select( dValue1, iComparison )  
+
+        call pColumn%select( dValue1, iComparison )
 
       endif
 
       this%lMask = pColumn%lMask
-      
-    endif    
 
-  end subroutine select_rows_from_column_double_sub  
+    endif
+
+  end subroutine select_rows_from_column_double_sub
 
 
   subroutine select_rows_from_column_datetime_sub( this, sColname, iComparison, dtValue1, dtValue2)
@@ -176,7 +176,7 @@ contains
     type (T_DATETIME), intent(in)                  :: dtValue1
     type (T_DATETIME), intent(in), optional        :: dtValue2
 
-    ! [ LOCALS ] 
+    ! [ LOCALS ]
     class (T_DATA_COLUMN), pointer :: pColumn
     type (T_STRING) :: stString
 
@@ -189,16 +189,16 @@ contains
         call pColumn%select( dtValue1, iComparison, dtValue2 )
 
       else
-      
-        call pColumn%select( dtValue1, iComparison )  
+
+        call pColumn%select( dtValue1, iComparison )
 
       endif
 
       this%lMask = pColumn%lMask
-      
-    endif    
 
-  end subroutine select_rows_from_column_datetime_sub  
+    endif
+
+  end subroutine select_rows_from_column_datetime_sub
 
 
 
@@ -210,7 +210,7 @@ contains
     type (T_STRING), intent(in)                    :: stValue1
     type (T_STRING), intent(in), optional          :: stValue2
 
-    ! [ LOCALS ] 
+    ! [ LOCALS ]
     class (T_DATA_COLUMN), pointer :: pColumn
     type (T_STRING) :: stString
 
@@ -223,16 +223,16 @@ contains
         call pColumn%select( stValue1, iComparison, stValue2 )
 
       else
-      
-        call pColumn%select( stValue1, iComparison )  
+
+        call pColumn%select( stValue1, iComparison )
 
       endif
 
       this%lMask = pColumn%lMask
-      
-    endif    
 
-  end subroutine select_rows_from_column_string_sub  
+    endif
+
+  end subroutine select_rows_from_column_string_sub
 
 
   subroutine select_rows_from_column_char_sub( this, sColname, iComparison, cValue1, cValue2)
@@ -243,7 +243,7 @@ contains
     character (len=*), intent(in)                  :: cValue1
     character (len=*), intent(in), optional        :: cValue2
 
-    ! [ LOCALS ] 
+    ! [ LOCALS ]
     class (T_DATA_COLUMN), pointer :: pColumn
     type (T_STRING) :: stString
 
@@ -256,16 +256,16 @@ contains
         call pColumn%select( cValue1, iComparison, cValue2 )
 
       else
-      
-        call pColumn%select( cValue1, iComparison )  
+
+        call pColumn%select( cValue1, iComparison )
 
       endif
 
       this%lMask = pColumn%lMask
-      
-    endif    
 
-  end subroutine select_rows_from_column_char_sub  
+    endif
+
+  end subroutine select_rows_from_column_char_sub
 
 
 
@@ -273,7 +273,7 @@ contains
 
     class (T_DATA_FRAME), intent(in)         :: this
     integer (kind=c_int)                     :: iColNum
-    class (T_DATA_COLUMN), pointer           :: pColumn 
+    class (T_DATA_COLUMN), pointer           :: pColumn
 
     pColumn => null()
 
@@ -285,12 +285,12 @@ contains
         pColumn => this%Columns(iColNum)%pColumn
 
       endif
-    
+
     else
 
       call warn("'Columns' member has not been allocated yet.", __FILE__, __LINE__)
 
-    endif    
+    endif
 
   end function get_column_pointer_byindex_fn
 
@@ -300,7 +300,7 @@ contains
 
     class (T_DATA_FRAME), intent(in)         :: this
     character (len=*), intent(in)            :: sColName
-    class (T_DATA_COLUMN), pointer           :: pColumn 
+    class (T_DATA_COLUMN), pointer           :: pColumn
 
     ! [ LOCALS ]
     integer (kind=c_int), allocatable :: iColNum(:)
@@ -312,11 +312,11 @@ contains
       pColumn => this%getcol(iColNum(1))
 
     else
-    
+
       pColumn => null()
       call warn("Failed to find a column with name "//trim(sColName), __FILE__,__LINE__)
 
-    endif  
+    endif
 
   end function get_column_pointer_byname_fn
 
@@ -339,11 +339,11 @@ contains
       iColNum = this%stColNames%which(sChar)
 
     else
-    
-      allocate(iColNum(1))  
+
+      allocate(iColNum(1))
       iColNum = 0
 
-    endif  
+    endif
 
   end function find_column_by_name_fn
 
@@ -365,7 +365,7 @@ contains
     this%stColNames = stColNames
     this%iDataTypes = iDataTypes
 
-    !> allocate space for the required number of class T_DATA_COLUMN_PTR 
+    !> allocate space for the required number of class T_DATA_COLUMN_PTR
     allocate( this%Columns(this%stColNames%count() ), stat=iStat )
 
     call assert(iStat==0, "Failed to allocate memory for data frame", __FILE__, __LINE__)
@@ -373,11 +373,11 @@ contains
     do iIndex = 1, ubound(this%Columns,1)
 
       allocate( T_DATA_COLUMN :: this%Columns(iIndex)%pColumn, stat=iStat )
- 
+
       associate ( col => this%Columns(iIndex)%pColumn )
 
         call col%new( iDataType = iDataTypes(iIndex), iCount = iRecordCount )
-            
+
         stString = this%stColNames%value(iIndex)
 
         print *, " Creating new column for "//asCharacter(stString) &
@@ -411,7 +411,7 @@ contains
 
     do while (stString%length() > 0)
 
-      stSubString = stString%chomp(sDelimiters)
+      call stString%chomp(stSubString, sDelimiters)
 
       iIndex = iIndex + 1
 
@@ -420,9 +420,9 @@ contains
       if (iIndex > ubound(this%Columns,1))  stop ("Too many columns read in.")
 
       associate (col => this%Columns(iIndex)%pColumn )
-   
+
         select case ( col%datatype() )
-   
+
           case (INTEGER_DATA)
 
             iRecnum = col%putval( stSubString%asInt() )
@@ -439,7 +439,7 @@ contains
 
             iRecnum = col%putval( stSubString )
 
-          case (T_DATETIME_DATA)  
+          case (T_DATETIME_DATA)
 
             iRecnum = col%putdatetime( stSubstring )
 
@@ -483,7 +483,7 @@ contains
     type (T_DATETIME) :: DT
 
     do iIndex = 1, ubound(this%Columns,1)
- 
+
       stString = this%stColNames%value(iIndex)
 
       write(*, "(/,a)") "Variable name: "//asCharacter(stString)
@@ -499,7 +499,7 @@ contains
           write (*, fmt="(7x, a, g15.5)") "Mean: ", this%Columns(iIndex)%pColumn%mean( this%lMask )
 
         case (T_DATETIME_DATA, T_DATE_DATA)
- 
+
           dValue = this%Columns(iIndex)%pColumn%min( this%lMask )
           call DT%setJulianDay(dValue)
           write(*, fmt="(7x,a,a)") "Min: ", DT%prettydate()
@@ -510,7 +510,7 @@ contains
 
       end select
 
-    enddo 
+    enddo
 
 
   end subroutine summarize_data_frame_sub

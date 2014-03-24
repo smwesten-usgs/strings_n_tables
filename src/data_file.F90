@@ -37,7 +37,7 @@ module data_file
 
     procedure, private :: does_file_exist_fn
     generic, public    :: exists => does_file_exist_fn
-  
+
 
     procedure, private :: count_number_of_lines_sub
     generic, public    :: countLines => count_number_of_lines_sub
@@ -114,11 +114,11 @@ contains
     call this%stMissingValue%deallocate()
 
   end subroutine deallocate_strings_sub
-  
+
 
 
   subroutine open_file_char_sub(this, sFilename, sCommentChars, sDelimiters)
- 
+
     class (T_DATA_FILE), intent(inout) :: this
     character (len=*), intent(in) :: sFilename
     character (len=*), intent(in), optional :: sCommentChars
@@ -130,14 +130,14 @@ contains
     if (present(sCommentChars)) then
       this%stCommentChars = sCommentChars
     else
-      this%stCommentChars = sCOMMENT_CHARS 
+      this%stCommentChars = sCOMMENT_CHARS
     endif
-    
+
     if (present(sDelimiters)) then
       this%stDelimiters = sDelimiters
     else
       this%stDelimiters = sWHITESPACE
-    endif    
+    endif
 
     stString = sFilename
 
@@ -147,7 +147,7 @@ contains
 
       open(newunit=this%iUnitNum, file=sFilename, iostat=this%iStat)
       call assert(this%iStat == 0, "Failed to open file.", __FILE__, __LINE__)
-      
+
       if (this%iStat == 0) this%lIsOpen = lTRUE
 
       call this%countLines()
@@ -196,9 +196,9 @@ contains
     class (T_DATA_FILE) :: this
     logical(kind=c_bool) :: lIsOpen
 
-    lIsOpen = this%lIsOpen 
+    lIsOpen = this%lIsOpen
 
-  end function is_file_open_fn  
+  end function is_file_open_fn
 
 
   subroutine count_number_of_lines_sub(this)
@@ -227,7 +227,7 @@ contains
                       set=this%stCommentChars%asCharacter())
 
         ! if there are valid characters and first character
-        ! is not in the list of comment characters, count as a 
+        ! is not in the list of comment characters, count as a
         ! valid record
         if (len_trim(sBuf) /= 0 .and. iIndex /= 1) &
           iNumRecords = iNumRecords + 1
@@ -262,7 +262,7 @@ contains
 
     do while ( stString%length() > 0)
 
-      stSubString = stString%chomp(",")
+      call stString%chomp(stSubString, ",")
       call stSubString%replace(" ", "_")
       call stSubString%replace(".", "_")
       call stList%append(stSubString)
@@ -297,6 +297,6 @@ contains
 
   end function read_line_of_data_fn
 
-  
+
 
 end module data_file

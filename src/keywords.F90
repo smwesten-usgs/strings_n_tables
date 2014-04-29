@@ -24,12 +24,11 @@ module keywords
     procedure, private :: set_values_float_sub
     procedure, private :: set_values_double_sub
     procedure, private :: set_values_string_sub
-    procedure, private :: set_values_string_list_sub
+
     generic, public :: setValues => set_values_int_sub, &
                                     set_values_float_sub, &
                                     set_values_double_sub, &
-                                    set_values_string_sub, &
-                                    set_values_string_list_sub
+                                    set_values_string_sub
 
     procedure :: getValues => get_values_fn
     procedure :: initialize => call_initialize_keylist_sub
@@ -63,12 +62,7 @@ contains
     class (KEYWORDS_T), intent(inout) :: this
     character (len=*), intent(in)     :: sChar
 
-    ! [ LOCALS ]
-    type (T_STRING) :: stString
-
-    stString = sChar
-
-    call this%stlKeywords%append(stString)
+    call this%stlKeywords%append(sChar)
 
   end subroutine add_keyword_sub
 
@@ -79,12 +73,7 @@ contains
     class (KEYWORDS_T), intent(inout) :: this
     character (len=*), intent(in)     :: sChar
 
-    ! [ LOCALS ]
-    type (T_STRING) :: stString
-
-    stString = sChar
-
-    call this%stlValues%append(stString)
+    call this%stlValues%append(sChar)
 
   end subroutine add_value_sub
 
@@ -134,28 +123,14 @@ contains
 
   !----------------------------------------------------------------------------
 
-  subroutine set_values_string_list_sub(this)
-
-    class (KEYWORDS_T), intent(inout) :: this
-
-  end subroutine set_values_string_list_sub
-
-  !----------------------------------------------------------------------------
-
   subroutine add_keyword_value_pair_sub(this, sKeyword, sArgument)
 
     class (KEYWORDS_T), intent(inout)    :: this
     character (len=*), intent(in)        :: sKeyword
     character (len=*), intent(in)        :: sArgument
 
-    type (T_STRING) :: stKeyword
-    type (T_STRING) :: stArgument
-
-    stKeyword = sKeyword
-    stArgument = sArgument
-
-    call this%stlKeyWords%append(stKeyword)
-    call this%stlValues%append(stArgument)
+    call this%stlKeyWords%append(sKeyword)
+    call this%stlValues%append(sArgument)
 
   end subroutine add_keyword_value_pair_sub
 

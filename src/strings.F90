@@ -14,7 +14,8 @@ module strings
    public :: clean
    public :: chomp
    public :: replace
-!   public :: asTextacter
+   public :: remove_repeats
+   public :: asCharacter
 
   interface operator(+)
     procedure :: concatenate_char_char_fn
@@ -219,32 +220,94 @@ contains
 
 !--------------------------------------------------------------------------------------------------
 
-  subroutine split_and_return_text_sub(sText1, sText, sDelimiters)
+  !> Strip repeated characters from string.
+  !!
+  !! Remove repeated characters from a string. By default the function looks for repeated spaces and eliminates them.
+  !! @param[in] sTextIn
+  function remove_repeats(sText1, sChar)            result(sText)
+
+    ! ARGUMENTS
+    character (len=*), intent(inout)           :: sText1
+    character (len=*), intent(in), optional    :: sChar
+    character (len=:), allocatable :: sText
+
+    ! LOCALS
+    character (len=256)            :: sBuf
+    integer (kind=c_int)           :: iR                 ! Index in sRecord
+    integer (kind=c_int)           :: iIndex1, iIndex2
+    character (len=1)              :: sChar_
+    logical (kind=c_bool)          :: lPreviouslyFound
+
+    ! eliminate any leading spaces
+    sText1 = adjustl(sText1)
+    sBuf = ""
+    iIndex2 = 0
+    lPreviouslyFound = lFALSE
+
+    if (present(sChar) ) then
+      sChar_ = sChar
+    else  
+      sChar_ = " "
+    endif
+
+    do iIndex1 = 1,len_trim(sText1)
+
+      iR = SCAN(sText1(iIndex1:iIndex1), sChar_)
+  
+      if(iR==0) then
+        ! sChar_ was not found
+        iIndex2 = iIndex2 + 1
+        sBuf(iIndex2:iIndex2) = sText1(iIndex1:iIndex1)
+        lPreviouslyFound = lFALSE
+
+      elseif( lPreviouslyFound ) then
+        ! sChar_ was found, and was also found in the position preceding this one
+
+        ! No OP
+
+      else
+        ! sChar_ was found, but was *not* found in the preceding position
+
+        iIndex2 = iIndex2 + 1
+        sBuf(iIndex2:iIndex2) = sText1(iIndex1:iIndex1)
+        lPreviouslyFound = lTRUE
+
+      end if
+
+    enddo
+
+    sText = trim(sBuf)
+
+  end function remove_repeats
+
+!--------------------------------------------------------------------------------------------------
+
+  subroutine split_and_return_text_sub(sText1, sText2, sDelimiters)
 
     character (len=*), intent(inout)                     :: sText1
-    character ( len=len_trim( sText1 ) ), intent(out)    :: sText
+    character ( len=len_trim( sText1 ) ), intent(out)    :: sText2
     character (len=*), intent(in), optional              :: sDelimiters
 
     ! [ LOCALS ]
-    character (len=:), allocatable :: sMyDelimiters
+    character (len=:), allocatable :: sDelimiters_
     integer (kind=c_int) :: iIndex
 
     if ( present(sDelimiters) ) then
-      sMyDelimiters = sDelimiters
+      sDelimiters_ = sDelimiters
     else
-      sMyDelimiters = sWHITESPACE
+      sDelimiters_ = sWHITESPACE
     endif
 
     iIndex = scan( string = sText1, &
-                   set = sMyDelimiters )
+                   set = sDelimiters_ )
 
     if (iIndex == 0) then
       ! no delimiters found; return string as was supplied originally
-      sText = sText1
+      sText2 = sText1
       sText1 = ""
     else
       ! delimiters were found; split and return the chunks of text
-      sText = trim(adjustl( sText1(1:iIndex-1) ) )
+      sText2 = trim(adjustl( sText1(1:iIndex-1) ) )
       sText1 = trim(adjustl(sText1(iIndex + 1:) ) )
     endif
 

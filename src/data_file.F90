@@ -13,16 +13,16 @@ module data_file
 
   type, public :: T_DATA_FILE
 
-    type (T_STRING), private        :: stFilename
-    type (T_STRING), private        :: stDelimiters
-    type (T_STRING), private        :: stCommentChars
-    integer (kind=c_int), private   :: iCurrentLinenum = 0
-    integer (kind=c_int), private   :: iNumberOfLines = 0
-    integer (kind=c_int), private   :: iNumberOfRecords = 0
-    logical (kind=c_bool), private  :: lIsOpen = lFALSE
-    integer (kind=c_int), private   :: iUnitNum
-    integer (kind=c_int), private   :: iStat
-    type (T_STRING), private        :: stMissingValue
+    character (len=:), allocatable  :: stFilename
+    character (len=:), allocatable  :: stDelimiters
+    character (len=:), allocatable  :: stCommentChars
+    integer (kind=c_int)            :: iCurrentLinenum = 0
+    integer (kind=c_int)            :: iNumberOfLines = 0
+    integer (kind=c_int)            :: iNumberOfRecords = 0
+    logical (kind=c_bool)           :: lIsOpen = lFALSE
+    integer (kind=c_int)            :: iUnitNum
+    integer (kind=c_int)            :: iStat
+    character (len=:), allocatable  :: stMissingValue
 
   contains
 

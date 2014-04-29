@@ -16,10 +16,10 @@ module keywords
   
   !> data structure to hold kwList, values, a help string, and a pointer to the initialization sub 
   type, public :: T_KEYWORDS
-    type (T_STRING_LIST)  :: stlKeywords
-    type (T_STRING_LIST)  :: stlValues
-    procedure(keySub), pointer :: init_sub => null()
-    type (T_STRING)       :: stHelp
+    type (STRING_LIST_T)               :: stlKeywords
+    type (STRING_LIST_T)               :: stlValues
+    procedure(keySub), pointer         :: init_sub => null()
+    character (len=:), allocatable     :: stHelp
 
   contains
   
@@ -106,7 +106,7 @@ contains
   function get_values_fn(this)    result(stlString)
 
     class (T_KEYWORDS), intent(in)    :: this
-    type (T_STRING_LIST)              :: stlString
+    type (STRING_LIST_T)              :: stlString
 
     stlString = this%stlValues
 

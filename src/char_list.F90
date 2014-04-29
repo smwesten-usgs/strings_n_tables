@@ -5,7 +5,7 @@ module char_list
 
 
   type T_CHARLIST
-    character (len=256)                   :: s = repeat(" ", 256)
+    character (len=:), allocatable        :: s
     class (T_CHARLIST), pointer           :: next => null()
   contains
 
@@ -33,9 +33,9 @@ contains
   end function clist_create 
 
 
-  subroutine clist_append(pList, sChar)
+  subroutine clist_append(pListElement, sChar)
 
-    type (T_CHARLIST), intent(inout), pointer    :: pList
+    type (T_CHARLIST), intent(inout), pointer     :: pListElement
     character (len=*), intent(in)                 :: sChar
 
     ! [ LOCALS ] 
@@ -47,7 +47,7 @@ contains
 
     iLen = len_trim(sChar)
 
-    pLast => clist_last(pList)
+    pLast => clist_last(pListElement)
     allocate( pNewElement, stat=iStat )
     pNewElement = T_CHARLIST( sChar, null() )
     pLast%next => pNewElement
@@ -60,8 +60,8 @@ contains
     type (T_CHARLIST), intent(in), pointer    :: pList
 
     ! [ LOCALS ]
-    character (len=256)              :: sChar
-    type (T_CHARLIST), pointer      :: pCurrent
+    character (len=:), allocatable        :: sChar
+    type (T_CHARLIST), pointer            :: pCurrent
 
     if (associated( pList )) then
 
@@ -82,12 +82,12 @@ contains
   end subroutine clist_print
 
 
-  function clist_last(pList)   result(pLast)
+  function clist_last(pListElement)   result(pLast)
 
-    class (T_CHARLIST), intent(inout), pointer   :: pList
+    class (T_CHARLIST), intent(inout), pointer   :: pListElement
     class (T_CHARLIST), pointer                  :: pLast
 
-    pLast => pList
+    pLast => pListElement
 
     do while ( associated(pLast%next) )
 
@@ -97,18 +97,18 @@ contains
 
   end function clist_last
 
-  function clist_getstring(pList)   result(sChar)
+  function clist_getstring(pListElement)   result(sChar)
 
-    type (T_CHARLIST), intent(in), pointer     :: pList
+    type (T_CHARLIST), intent(in), pointer     :: pListElement
     character (len=256)                         :: sChar
 
     ! [ LOCALS ]
     integer (kind=c_int) :: iLen
     integer (kind=c_int) :: iIndex
 
-    if ( associated(pList) ) then
+    if ( associated(pListElement) ) then
 
-      sChar = trim( pList%s )
+      sChar = trim( pListElement%s )
 
     else
 

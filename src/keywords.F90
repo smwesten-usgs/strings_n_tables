@@ -8,11 +8,11 @@ module keywords
 
   
   !> data structure to hold keywords, values, a help string, and a pointer to the initialization sub 
-  type, public :: T_KEYWORDS
-    type (T_STRING_LIST)  :: stlKeywords
-    type (T_STRING_LIST)  :: stlValues
-    procedure(keySub), pointer :: init_sub => null()
-    type (T_STRING)       :: stHelp
+  type, public :: KEYWORDS_T
+    type (STRING_LIST_T)                    :: stlKeywords
+    type (STRING_LIST_T)                    :: stlValues
+    procedure(keySub), pointer              :: init_sub => null()
+    character (len=:), allocatable          :: stHelp
 
   contains
   
@@ -34,13 +34,13 @@ module keywords
     procedure :: getValues => get_values_fn
     procedure :: initialize => call_initialize_keylist_sub
 
-  end type T_KEYWORDS
+  end type KEYWORDS_T
 
   
   abstract interface 
     subroutine keySub(this)
-      import :: T_KEYWORDS
-      class (T_KEYWORDS) :: this
+      import :: KEYWORDS_T
+      class (KEYWORDS_T) :: this
     end subroutine keySub
   end interface
 
@@ -48,7 +48,7 @@ contains
 
   subroutine call_initialize_keylist_sub(this, proc)
 
-    class (T_KEYWORDS), intent(inout)  :: this
+    class (KEYWORDS_T), intent(inout)  :: this
     procedure(keySub)                  :: proc
 
     this%init_sub => proc
@@ -60,7 +60,7 @@ contains
 
   subroutine add_keyword_sub(this, sChar)
 
-    class (T_KEYWORDS), intent(inout) :: this
+    class (KEYWORDS_T), intent(inout) :: this
     character (len=*), intent(in)     :: sChar
 
     ! [ LOCALS ]
@@ -76,7 +76,7 @@ contains
 
   subroutine add_value_sub(this, sChar)
 
-    class (T_KEYWORDS), intent(inout) :: this
+    class (KEYWORDS_T), intent(inout) :: this
     character (len=*), intent(in)     :: sChar
 
     ! [ LOCALS ]
@@ -92,7 +92,7 @@ contains
 
   subroutine set_values_int_sub(this, iValues)    
 
-    class (T_KEYWORDS), intent(inout) :: this
+    class (KEYWORDS_T), intent(inout) :: this
     integer (kind=c_int)              :: iValues(:)
 
     ! [ LOCALS ]
@@ -112,7 +112,7 @@ contains
 
   subroutine set_values_float_sub(this)
 
-    class (T_KEYWORDS), intent(inout) :: this
+    class (KEYWORDS_T), intent(inout) :: this
 
   end subroutine set_values_float_sub
 
@@ -120,7 +120,7 @@ contains
 
   subroutine set_values_double_sub(this)
 
-    class (T_KEYWORDS), intent(inout) :: this
+    class (KEYWORDS_T), intent(inout) :: this
 
   end subroutine set_values_double_sub
 
@@ -128,7 +128,7 @@ contains
 
   subroutine set_values_string_sub(this)
 
-    class (T_KEYWORDS), intent(inout) :: this
+    class (KEYWORDS_T), intent(inout) :: this
 
   end subroutine set_values_string_sub
 
@@ -136,7 +136,7 @@ contains
 
   subroutine set_values_string_list_sub(this)
 
-    class (T_KEYWORDS), intent(inout) :: this
+    class (KEYWORDS_T), intent(inout) :: this
 
   end subroutine set_values_string_list_sub
 
@@ -144,7 +144,7 @@ contains
 
   subroutine add_keyword_value_pair_sub(this, sKeyword, sArgument)
 
-    class (T_KEYWORDS), intent(inout)    :: this
+    class (KEYWORDS_T), intent(inout)    :: this
     character (len=*), intent(in)        :: sKeyword
     character (len=*), intent(in)        :: sArgument
 
@@ -163,8 +163,8 @@ contains
 
   function get_values_fn(this)    result(stlString)
 
-    class (T_KEYWORDS), intent(in)    :: this
-    type (T_STRING_LIST)              :: stlString
+    class (KEYWORDS_T), intent(in)    :: this
+    type (STRING_LIST_T)              :: stlString
 
     stlString = this%stlValues
 

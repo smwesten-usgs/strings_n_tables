@@ -8,8 +8,6 @@ program testchar
 
   type (T_CHARLIST), pointer :: plist
 
-  allocate (pList) 	
-
   c1 = "String 1"
   c2 = "String 2"
   c3 = c1 // " "//c2
@@ -28,7 +26,7 @@ program testchar
 
   print *, __FILE__, ": ", __LINE__
   
-  call clist_append(plist, c1)
+  plist => clist_create( c1 )
   print *, __FILE__, ": ", __LINE__
 
   call clist_append(plist, c2)

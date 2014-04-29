@@ -12,7 +12,7 @@ module block_list
   private
   
   type, public :: T_BLOCK_LIST
-    type (T_STRING_LIST)                :: stlBlockNames
+    type (STRING_LIST_T)                :: stlBlockNames
     type (T_BLOCK), allocatable         :: blocks(:)
 
   contains

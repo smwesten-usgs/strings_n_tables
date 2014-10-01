@@ -16,17 +16,17 @@ module keywords
   
   !> data structure to hold kwList, values, a help string, and a pointer to the initialization sub 
   type, public :: T_KEYWORDS
-    type (T_STRING_LIST)  :: stlKeywords
-    type (T_STRING_LIST)  :: stlValues
-    procedure(keySub), pointer :: init_sub => null()
-    type (T_STRING)       :: stHelp
+    type (STRING_LIST_T)               :: stlKeywords
+    type (STRING_LIST_T)               :: stlValues
+    procedure(keySub), pointer         :: init_sub => null()
+    character (len=:), allocatable     :: stHelp
 
   contains
   
     procedure :: addKeyPair => add_keyword_value_pair_sub
     procedure :: addKeyword => add_keyword_sub
     procedure :: addValue => add_value_sub
-    procedure :: setValues => set_values_sub
+!    procedure :: setValues => set_values_sub
     procedure :: getValues => get_values_fn
     procedure :: initialize => call_initialize_keylist_sub
 
@@ -59,12 +59,7 @@ contains
     class (T_KEYWORDS), intent(inout) :: this
     character (len=*), intent(in)     :: sChar
 
-    ! [ LOCALS ]
-    type (T_STRING) :: stString
-
-    stString = sChar
-
-    call this%stlKeywords%append(stString)
+    call this%stlKeywords%append(sChar)
 
   end subroutine add_keyword_sub
 
@@ -75,12 +70,7 @@ contains
     class (T_KEYWORDS), intent(inout) :: this
     character (len=*), intent(in)     :: sChar
 
-    ! [ LOCALS ]
-    type (T_STRING) :: stString
-
-    stString = sChar
-
-    call this%stlValues%append(stString)
+    call this%stlValues%append(sChar)
 
   end subroutine add_value_sub
 
@@ -91,14 +81,8 @@ contains
     character (len=*), intent(in)        :: sKeyword
     character (len=*), intent(in)        :: sArgument
 
-    type (T_STRING) :: stKeyword
-    type (T_STRING) :: stArgument
-
-    stKeyword = sKeyword
-    stArgument = sArgument
-
-    call this%stlKeyWord%append(stKeyword)
-    call this%stlValues%append(stArgument)
+    call this%stlKeyWords%append(sKeyword)
+    call this%stlValues%append(sArgument)
 
   end subroutine add_keyword_value_pair_sub
 
@@ -106,7 +90,7 @@ contains
   function get_values_fn(this)    result(stlString)
 
     class (T_KEYWORDS), intent(in)    :: this
-    type (T_STRING_LIST)              :: stlString
+    type (STRING_LIST_T)              :: stlString
 
     stlString = this%stlValues
 
